@@ -1,3 +1,14 @@
+*.jpg
+*.gif
+*.csv
+*.pkl
+*.png
+*.html
+
+images/
+country_infos_devided/
+graph_files/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
