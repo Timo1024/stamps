@@ -1,0 +1,3 @@
+[submodule "src/app"]
+	path = src/app
+	url = https://github.com/Timo1024/qr-code

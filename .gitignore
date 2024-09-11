@@ -5,9 +5,14 @@
 *.png
 *.html
 
+*.npy
+*.npz
+
 images/
 country_infos_devided/
 graph_files/
+
+images_all/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
