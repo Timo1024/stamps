@@ -139,6 +139,88 @@ dev.off()
 
 
 
+##########################
+# analyze all links file #
+##########################
+
+setwd("E:/programming/stamps/src/crawling")
+df_images <- read.csv("./csv_files/all_images_url.csv")
+df_stamps <- read.csv("./csv_files/all_stamps_info.csv")
+
+category_distribution <- table(df_stamps$Category)
+
+# plot amount Postage stamps vs sum of all other categories
+library(ggplot2)
+ggplot(data = data.frame(x = c("Postage stamps", "Other categories"), y = c(category_distribution["Postage stamps"], sum(category_distribution) - category_distribution["Postage stamps"])), aes(x = x, y = y)) + 
+  geom_bar(stat = "identity") + 
+  theme_minimal()
+
+# get watermark for all Categories other than Postage stamps
+watermark <- df_stamps$Watermark[df_stamps$Category != "Postage stamps"]
+watermark_distribution <- table(watermark)
+
+
+
+
+# TODO need to concat the big tables with tables 2 (index 7811) #
+# TODO need to get new watermarks for the new categories #
+
+setwd("E:/programming/stamps/src/crawling")
+df_images <- read.csv("./csv_files/all_images_url.csv")
+df_stamps <- read.csv("./csv_files/all_stamps_info.csv")
+
+df_images_2 <- read.csv("./csv_files/all_images_url_2.csv")
+df_stamps_2 <- read.csv("./csv_files/all_stamps_info_2.csv")
+
+concated_images <- rbind(df_images, df_images_2)
+concated_stamps <- rbind(df_stamps, df_stamps_2)
+
+# concated_stamps[60000:60010,]
+
+setDescriptions <- concated_stamps$SetDescription
+# split at \n
+setDescriptions <- strsplit(setDescriptions, "\n")
+year_spans <- lapply(setDescriptions, function(x) x[1])
+descriptions <- lapply(setDescriptions, function(x) x[2])
+
+# remove whitespaces
+year_spans <- trimws(year_spans)
+descriptions <- trimws(descriptions)
+
+# remove spaces in yearspan
+year_spans <- gsub(" ", "", year_spans)
+
+concated_stamps$SetDescription <- descriptions
+concated_stamps$YearSpan <- year_spans
+
+# write the new concated tables to csv
+write.csv(concated_images, file = "./csv_files/all_images_url_concat.csv", row.names = FALSE)
+write.csv(concated_stamps, file = "./csv_files/all_stamps_info_concat.csv", row.names = FALSE)
+
+
+s
+
+########################################
+# analyze concated stamp info file #####
+########################################
+
+setwd("E:/programming/stamps/src/crawling")
+stamp_info <- read.csv("./csv_files/all_stamps_info_concat.csv")
+
+# remove all rows where Used is "-"
+stamp_info <- stamp_info[stamp_info$Used != "-",]
+
+# remove all "," from Used column
+stamp_info$Used <- gsub(",", "", stamp_info$Used)
+
+# convert Used to numeric
+stamp_info$Used <- as.numeric(stamp_info$Used)
+
+# sort by Used column
+stamp_info <- stamp_info[rev(order(stamp_info$Used)),]
+
+
+
 
 
 
