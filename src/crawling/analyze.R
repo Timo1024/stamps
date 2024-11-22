@@ -21,7 +21,7 @@ all_countries$country <- all_countries$X
 
 # loop over all rows
 paths <- list()
-for (i in 1:nrow(all_countries)) {
+for (i in seq_len(nrow(all_countries))) {
   country <- all_countries$country[i]
   parent_countries <- all_countries$parent_countries[i]
   parent_countries <- gsub("\\[|\\]", "", parent_countries)
