@@ -1,6 +1,11 @@
 tokens.json
 
+*.h5
+*.keras
+*.zip
+
 *.jpg
+*.jpeg
 *.gif
 *.csv
 *.pkl
