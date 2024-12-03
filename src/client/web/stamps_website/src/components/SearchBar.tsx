@@ -68,7 +68,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     <div style={{ padding: '0px', maxWidth: '600px', margin: '0 auto' }}>
       <form onSubmit={handleSubmit}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start'}}>
-            <div style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '10px' }}>Search</div>
+          <div style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '10px' }}>Search</div>
           <input
             type="text"
             placeholder="Username"
@@ -119,15 +119,29 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             onChange={(e) => handleChange('keywords', e.target.value ? e.target.value.split(',').map(k => k.trim()) : null)}
           />
 
-          <select
-            multiple
-            value={searchParams.colors || []}
-            onChange={(e) => handleChange('colors', Array.from(e.target.selectedOptions, option => option.value))}
-          >
-            {colors.map(color => (
-              <option key={color} value={color}>{color}</option>
-            ))}
-          </select>
+          <div style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '10px' }}>Advanced Search Options</div>
+
+          <div className="select-group">
+            {/* <div className="select-label">Color:</div> */}
+            <select
+              value={searchParams.colors?.[0] || ''}
+              onChange={(e) => {
+                const selectedColor = e.target.value;
+                // If selecting the same color that's already selected, clear it
+                if (searchParams.colors?.[0] === selectedColor) {
+                  handleChange('colors', null);
+                } else {
+                  handleChange('colors', [selectedColor]);
+                }
+              }}
+              className="select-input"
+            >
+              <option value="">Select a color</option>
+              {colors.map(color => (
+                <option key={color} value={color}>{color}</option>
+              ))}
+            </select>
+          </div>
 
           <input
             type="date"

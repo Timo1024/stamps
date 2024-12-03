@@ -193,6 +193,10 @@ html, body {
   box-sizing: border-box;
   padding: 0.5rem;
   margin-bottom: 0.5rem;
+  background-color: #181b1b;
+  border: none;
+  border-radius: 5px;
+  color: white
 }
 
 .search-sidebar .input-group {
@@ -205,6 +209,38 @@ html, body {
 .search-sidebar .input-group input {
   width: calc(50% - 5px);
   margin-bottom: 0;
+}
+
+.select-group {
+  width: 100%;
+  /* margin-bottom: 1rem; */
+}
+
+.select-label {
+  margin-bottom: 0.5rem;
+  color: #bdbdbd;
+  text-align: left;
+}
+
+.select-input {
+  width: 100%;
+  background-color: #181b1b;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  padding: 0.5rem;
+}
+
+.select-input option {
+  padding: 0.5rem;
+  background-color: #181b1b;
+}
+
+.multi-select,
+.checkbox-group,
+.checkbox-group-label,
+.checkbox-label {
+  display: none;
 }
 
 .results-container {
