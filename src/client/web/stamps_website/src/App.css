@@ -96,9 +96,9 @@ html, body {
   object-fit: contain;
 }
 
-.stamp-info {
+/* .stamp-info {
   margin-top: 0.5rem;
-}
+} */
 
 .title {
   position: fixed;
@@ -253,7 +253,8 @@ html, body {
   flex: 1;
   /* Match the width calculation of the sidebar: min-width 350px, 30vw width, max-width 500px */
   margin-left: max(350px, min(30vw, 500px));
-  padding: 2rem;
+  padding-left: 2rem;
+  padding-top: 1rem;
   overflow-y: auto;
   box-sizing: border-box;
 }
@@ -265,6 +266,7 @@ html, body {
 .search-results-title {
   text-align: left;
   margin-bottom: 20px;
+  margin-top: 0px;
 }
 
 .autocomplete-container {

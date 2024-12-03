@@ -127,7 +127,8 @@ function App() {
                     key={stamp.stamp_id}
                     country={stamp.country}
                     name={stamp.name}
-                    imageLink={imageLinks[index] || null}
+                    imageLink={stamp.image_path ? stamp.image_path.replace('./images_all_2/', '') : null}
+                    colorPalette={stamp.color_palette}
                   />
                 ))
               ) : (
