@@ -3,6 +3,7 @@ import './App.css';
 import axios from 'axios';
 
 import StampCard from './components/StampCard';
+import SearchBar from './components/SearchBar';
 
 interface Stamp {
   added_at: string;
@@ -58,19 +59,36 @@ interface Stamp {
   year: number;
 }
 
+interface SearchPayload {
+  username: string;
+  country: string | null;
+  year_from: number | null;
+  year_to: number | null;
+  denomination: number | null;
+  theme: string | null;
+  keywords: string[] | null;
+  colors: string[] | null;
+  date_of_issue: string | null;
+  category: string | null;
+  number_issued: number | null;
+  perforation_horizontal: number | null;
+  perforation_vertical: number | null;
+  perforation_keyword: string | null;
+  sheet_size_amount: number | null;
+  sheet_size_horizontal: number | null;
+  sheet_size_vertical: number | null;
+  stamp_size_horizontal: number | null;
+  stamp_size_vertical: number | null;
+}
+
 function App() {
-  const [username, setUsername] = useState<string>('');
   const [stamps, setStamps] = useState<Stamp[]>([]);
   const [error, setError] = useState<string>('');
   const [imageLinks, setImageLinks] = useState<string[]>([]);
 
-  const handleUsernameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setUsername(event.target.value);
-  };
-
-  const fetchStamps = async () => {
+  const fetchStamps = async (payload: SearchPayload) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/stamps/by_username/${username}`);
+      const response = await axios.post(`http://localhost:5000/api/stamps/search`, payload);
       setStamps(response.data);
       setError('');
 
@@ -84,37 +102,20 @@ function App() {
       setImageLinks(links);
     } catch (err) {
       setError('Error fetching stamps data.');
-    }
-  };
-
-  const handleButtonClick = () => {
-    if (username) {
-      fetchStamps();
-    } else {
-      setError('Please enter a username.');
+      console.error("Error fetching stamps data:", err);
     }
   };
 
   return (
     <div className="App">
-      <h1 className='title'>Stamp Ownership</h1>
-      <div className='input-container'>
-        <input
-          type="text"
-          placeholder="Enter Username"
-          value={username}
-          onChange={handleUsernameChange}
-          className='username-input'
-        />
-        <div onClick={handleButtonClick} className='get-stamps-button'>
-          Get Stamps
-        </div>
-      </div>
+      <h1 className='title'>Stamp Collection Search</h1>
+      
+      <SearchBar onSearch={fetchStamps} />
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
       <div>
-        <h2>Stamps Owned:</h2>
+        <h2>Search Results:</h2>
         <div className="stamps-container">
           {stamps.length > 0 ? (
             stamps.map((stamp, index) => (
@@ -126,40 +127,10 @@ function App() {
               />
             ))
           ) : (
-            <p>No stamps found for this user.</p>
+            <p>No stamps found matching your search criteria.</p>
           )}
         </div>
       </div>
-
-      {/* <div>
-        <h2>Stamps Owned:</h2>
-        <ul>
-          {stamps.length > 0 ? (
-            stamps.map((stamp) => (
-              <li key={stamp.stamp_id}>
-                {stamp.country} - {stamp.name}
-              </li>
-            ))
-          ) : (
-            <p>No stamps found for this user.</p>
-          )}
-        </ul>
-      </div>
-
-      <div>
-        <h2>Stamp Images:</h2>
-        <div>
-        {imageLinks
-          .map((link, index) => (
-            <img 
-              key={index} 
-              src={link ? `http://localhost:5000/images/${link}` : '/assets/images/stamp_placeholder_2.jpg'} 
-              alt={`Stamp ${index}`} 
-              className='stamp-image'
-            />
-          ))}
-        </div>
-      </div> */}
     </div>
   );
 }

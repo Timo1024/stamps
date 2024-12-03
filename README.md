@@ -7,7 +7,7 @@ In projects root directory run:
 
 # run react app
 
-`cd E:\programming\stamps\src\client\web\stamps_webiste`  
+`cd E:\programming\stamps\src\client\web\stamps_website`  
 `npm start`
 
 # run python server
