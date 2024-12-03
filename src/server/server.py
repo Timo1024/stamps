@@ -66,6 +66,44 @@ def get_countries():
     connection.close()
     return jsonify(countries)
 
+# get all unique themes
+@app.route('/api/themes', methods=['GET'])
+def get_themes():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    query = """
+        SELECT DISTINCT themes 
+        FROM stamps 
+        WHERE themes IS NOT NULL 
+        AND themes != '[]'
+    """
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    cursor.close()
+    connection.close()
+
+    # Parse themes and create a set of unique themes
+    all_themes = set()
+    for row in rows:
+        try:
+            # Convert string representation of list to actual list
+            themes_list = eval(row['themes'])
+            for theme in themes_list:
+                # Split theme by '/' and add each level
+                theme_parts = theme.split('/')
+                current_path = ''
+                for part in theme_parts:
+                    if current_path:
+                        current_path += '/'
+                    current_path += part
+                    all_themes.add(current_path)
+        except:
+            continue
+
+    # Convert set to sorted list
+    themes = sorted(list(all_themes))
+    return jsonify(themes)
+
 # search endpoint to handle all search parameters
 @app.route('/api/stamps/search', methods=['POST'])
 def search_stamps():

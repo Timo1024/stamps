@@ -58,24 +58,36 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const countryContainerRef = useRef<HTMLDivElement>(null);
 
+  const [themes, setThemes] = useState<string[]>([]);
+  const [filteredThemes, setFilteredThemes] = useState<string[]>([]);
+  const [showThemeDropdown, setShowThemeDropdown] = useState(false);
+  const themeContainerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    // Fetch countries when component mounts
-    const fetchCountries = async () => {
+    // Fetch countries and themes when component mounts
+    const fetchData = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/countries');
-        setCountries(response.data);
+        const [countriesResponse, themesResponse] = await Promise.all([
+          axios.get('http://localhost:5000/api/countries'),
+          axios.get('http://localhost:5000/api/themes')
+        ]);
+        setCountries(countriesResponse.data);
+        setThemes(themesResponse.data);
       } catch (error) {
-        console.error('Error fetching countries:', error);
+        console.error('Error fetching data:', error);
       }
     };
-    fetchCountries();
+    fetchData();
   }, []);
 
   useEffect(() => {
-    // Add click outside handler
+    // Add click outside handler for both dropdowns
     const handleClickOutside = (event: MouseEvent) => {
       if (countryContainerRef.current && !countryContainerRef.current.contains(event.target as Node)) {
         setShowCountryDropdown(false);
+      }
+      if (themeContainerRef.current && !themeContainerRef.current.contains(event.target as Node)) {
+        setShowThemeDropdown(false);
       }
     };
 
@@ -112,6 +124,28 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   const selectCountry = (country: string) => {
     handleChange('country', country);
     setShowCountryDropdown(false);
+  };
+
+  const handleThemeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    handleChange('theme', value);
+    
+    // Filter themes based on input
+    if (value) {
+      const filtered = themes.filter(theme => 
+        theme.toLowerCase().includes(value.toLowerCase())
+      );
+      setFilteredThemes(filtered);
+      setShowThemeDropdown(true);
+    } else {
+      setFilteredThemes([]);
+      setShowThemeDropdown(false);
+    }
+  };
+
+  const selectTheme = (theme: string) => {
+    handleChange('theme', theme);
+    setShowThemeDropdown(false);
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -165,6 +199,32 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             )}
           </div>
 
+          <div className="autocomplete-container" ref={themeContainerRef}>
+            <input
+              type="text"
+              placeholder="Theme"
+              value={searchParams.theme || ''}
+              onChange={handleThemeChange}
+              onFocus={() => setShowThemeDropdown(true)}
+              autoComplete="new-password"
+              autoCorrect="off"
+              spellCheck="false"
+            />
+            {showThemeDropdown && filteredThemes.length > 0 && (
+              <div className="autocomplete-dropdown">
+                {filteredThemes.map((theme, index) => (
+                  <div
+                    key={index}
+                    className="autocomplete-item"
+                    onClick={() => selectTheme(theme)}
+                  >
+                    {theme}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div style={{ display: 'flex', gap: '10px', width: '100%'}}>
             <input
               type="number"
@@ -191,16 +251,6 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             placeholder="Denomination"
             value={searchParams.denomination || ''}
             onChange={(e) => handleChange('denomination', e.target.value ? Number(e.target.value) : null)}
-            autoComplete="new-password"
-            autoCorrect="off"
-            spellCheck="false"
-          />
-
-          <input
-            type="text"
-            placeholder="Theme"
-            value={searchParams.theme || ''}
-            onChange={(e) => handleChange('theme', e.target.value)}
             autoComplete="new-password"
             autoCorrect="off"
             spellCheck="false"
