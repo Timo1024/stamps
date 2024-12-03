@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 interface SearchPayload {
   username: string;
@@ -52,11 +53,50 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     stamp_size_vertical: null,
   });
 
+  const [countries, setCountries] = useState<string[]>([]);
+  const [filteredCountries, setFilteredCountries] = useState<string[]>([]);
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+
+  useEffect(() => {
+    // Fetch countries when component mounts
+    const fetchCountries = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/countries');
+        setCountries(response.data);
+      } catch (error) {
+        console.error('Error fetching countries:', error);
+      }
+    };
+    fetchCountries();
+  }, []);
+
   const handleChange = (field: keyof SearchPayload, value: any) => {
     setSearchParams((prev) => ({
       ...prev,
       [field]: value,
     }));
+  };
+
+  const handleCountryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    handleChange('country', value);
+    
+    // Filter countries based on input
+    if (value) {
+      const filtered = countries.filter(country => 
+        country.toLowerCase().includes(value.toLowerCase())
+      );
+      setFilteredCountries(filtered);
+      setShowCountryDropdown(true);
+    } else {
+      setFilteredCountries([]);
+      setShowCountryDropdown(false);
+    }
+  };
+
+  const selectCountry = (country: string) => {
+    handleChange('country', country);
+    setShowCountryDropdown(false);
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -76,12 +116,28 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             onChange={(e) => handleChange('username', e.target.value)}
           />
 
-          <input
-            type="text"
-            placeholder="Country"
-            value={searchParams.country || ''}
-            onChange={(e) => handleChange('country', e.target.value)}
-          />
+          <div className="autocomplete-container">
+            <input
+              type="text"
+              placeholder="Country"
+              value={searchParams.country || ''}
+              onChange={handleCountryChange}
+              onFocus={() => setShowCountryDropdown(true)}
+            />
+            {showCountryDropdown && filteredCountries.length > 0 && (
+              <div className="autocomplete-dropdown">
+                {filteredCountries.map((country, index) => (
+                  <div
+                    key={index}
+                    className="autocomplete-item"
+                    onClick={() => selectCountry(country)}
+                  >
+                    {country}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           <div style={{ display: 'flex', gap: '10px', width: '100%'}}>
             <input
