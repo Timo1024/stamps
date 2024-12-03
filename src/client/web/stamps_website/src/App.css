@@ -310,4 +310,5 @@ html, body {
 
 .search-sidebar input[type="number"] {
   -moz-appearance: textfield; /* Firefox */
+  appearance: textfield; /* Standard syntax */
 }
