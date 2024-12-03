@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
 interface SearchPayload {
@@ -56,6 +56,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   const [countries, setCountries] = useState<string[]>([]);
   const [filteredCountries, setFilteredCountries] = useState<string[]>([]);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const countryContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Fetch countries when component mounts
@@ -68,6 +69,20 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
       }
     };
     fetchCountries();
+  }, []);
+
+  useEffect(() => {
+    // Add click outside handler
+    const handleClickOutside = (event: MouseEvent) => {
+      if (countryContainerRef.current && !countryContainerRef.current.contains(event.target as Node)) {
+        setShowCountryDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   const handleChange = (field: keyof SearchPayload, value: any) => {
@@ -106,7 +121,12 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
 
   return (
     <div style={{ padding: '0px', maxWidth: '600px', margin: '0 auto' }}>
-      <form onSubmit={handleSubmit}>
+      <form 
+        onSubmit={handleSubmit} 
+        autoComplete="off" 
+        autoCorrect="off"
+        spellCheck="false"
+      >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start'}}>
           <div style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '10px' }}>Search</div>
           <input
@@ -114,15 +134,21 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             placeholder="Username"
             value={searchParams.username}
             onChange={(e) => handleChange('username', e.target.value)}
+            autoComplete="new-password"
+            autoCorrect="off"
+            spellCheck="false"
           />
 
-          <div className="autocomplete-container">
+          <div className="autocomplete-container" ref={countryContainerRef}>
             <input
               type="text"
               placeholder="Country"
               value={searchParams.country || ''}
               onChange={handleCountryChange}
               onFocus={() => setShowCountryDropdown(true)}
+              autoComplete="new-password"
+              autoCorrect="off"
+              spellCheck="false"
             />
             {showCountryDropdown && filteredCountries.length > 0 && (
               <div className="autocomplete-dropdown">
@@ -145,12 +171,18 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
               placeholder="Year From"
               value={searchParams.year_from || ''}
               onChange={(e) => handleChange('year_from', e.target.value ? Number(e.target.value) : null)}
+              autoComplete="new-password"
+              autoCorrect="off"
+              spellCheck="false"
             />
             <input
               type="number"
               placeholder="Year To"
               value={searchParams.year_to || ''}
               onChange={(e) => handleChange('year_to', e.target.value ? Number(e.target.value) : null)}
+              autoComplete="new-password"
+              autoCorrect="off"
+              spellCheck="false"
             />
           </div>
 
@@ -159,6 +191,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             placeholder="Denomination"
             value={searchParams.denomination || ''}
             onChange={(e) => handleChange('denomination', e.target.value ? Number(e.target.value) : null)}
+            autoComplete="new-password"
+            autoCorrect="off"
+            spellCheck="false"
           />
 
           <input
@@ -166,6 +201,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             placeholder="Theme"
             value={searchParams.theme || ''}
             onChange={(e) => handleChange('theme', e.target.value)}
+            autoComplete="new-password"
+            autoCorrect="off"
+            spellCheck="false"
           />
 
           <input
@@ -173,6 +211,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             placeholder="Keywords (comma-separated)"
             value={searchParams.keywords?.join(', ') || ''}
             onChange={(e) => handleChange('keywords', e.target.value ? e.target.value.split(',').map(k => k.trim()) : null)}
+            autoComplete="new-password"
+            autoCorrect="off"
+            spellCheck="false"
           />
 
           <div style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '10px' }}>Advanced Search Options</div>
@@ -203,6 +244,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             type="date"
             value={searchParams.date_of_issue || ''}
             onChange={(e) => handleChange('date_of_issue', e.target.value)}
+            autoComplete="new-password"
+            autoCorrect="off"
+            spellCheck="false"
           />
 
           <select
@@ -220,6 +264,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             placeholder="Number Issued"
             value={searchParams.number_issued || ''}
             onChange={(e) => handleChange('number_issued', e.target.value ? Number(e.target.value) : null)}
+            autoComplete="new-password"
+            autoCorrect="off"
+            spellCheck="false"
           />
 
           <div style={{ display: 'flex', gap: '10px', width: '100%'}}>
@@ -228,12 +275,18 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
               placeholder="Perforation Horizontal"
               value={searchParams.perforation_horizontal || ''}
               onChange={(e) => handleChange('perforation_horizontal', e.target.value ? Number(e.target.value) : null)}
+              autoComplete="new-password"
+              autoCorrect="off"
+              spellCheck="false"
             />
             <input
               type="number"
               placeholder="Perforation Vertical"
               value={searchParams.perforation_vertical || ''}
               onChange={(e) => handleChange('perforation_vertical', e.target.value ? Number(e.target.value) : null)}
+              autoComplete="new-password"
+              autoCorrect="off"
+              spellCheck="false"
             />
           </div>
 
@@ -242,6 +295,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             placeholder="Perforation Keyword"
             value={searchParams.perforation_keyword || ''}
             onChange={(e) => handleChange('perforation_keyword', e.target.value)}
+            autoComplete="new-password"
+            autoCorrect="off"
+            spellCheck="false"
           />
 
           <input
@@ -249,6 +305,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             placeholder="Sheet Size Amount"
             value={searchParams.sheet_size_amount || ''}
             onChange={(e) => handleChange('sheet_size_amount', e.target.value ? Number(e.target.value) : null)}
+            autoComplete="new-password"
+            autoCorrect="off"
+            spellCheck="false"
           />
 
           <div style={{ display: 'flex', gap: '10px', width: '100%'}}>
@@ -257,12 +316,18 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
               placeholder="Sheet Size Horizontal"
               value={searchParams.sheet_size_horizontal || ''}
               onChange={(e) => handleChange('sheet_size_horizontal', e.target.value ? Number(e.target.value) : null)}
+              autoComplete="new-password"
+              autoCorrect="off"
+              spellCheck="false"
             />
             <input
               type="number"
               placeholder="Sheet Size Vertical"
               value={searchParams.sheet_size_vertical || ''}
               onChange={(e) => handleChange('sheet_size_vertical', e.target.value ? Number(e.target.value) : null)}
+              autoComplete="new-password"
+              autoCorrect="off"
+              spellCheck="false"
             />
           </div>
 
@@ -272,12 +337,18 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
               placeholder="Stamp Size Horizontal"
               value={searchParams.stamp_size_horizontal || ''}
               onChange={(e) => handleChange('stamp_size_horizontal', e.target.value ? Number(e.target.value) : null)}
+              autoComplete="new-password"
+              autoCorrect="off"
+              spellCheck="false"
             />
             <input
               type="number"
               placeholder="Stamp Size Vertical"
               value={searchParams.stamp_size_vertical || ''}
               onChange={(e) => handleChange('stamp_size_vertical', e.target.value ? Number(e.target.value) : null)}
+              autoComplete="new-password"
+              autoCorrect="off"
+              spellCheck="false"
             />
           </div>
 

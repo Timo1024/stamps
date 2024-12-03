@@ -189,14 +189,20 @@ html, body {
 .search-sidebar input,
 .search-sidebar select {
   width: 100%;
-  /* max-width: 300px; */
   box-sizing: border-box;
   padding: 0.5rem;
   margin-bottom: 0.5rem;
   background-color: #181b1b;
-  border: none;
+  border: 1px solid transparent;
   border-radius: 5px;
   color: white
+}
+
+.search-sidebar input:focus {
+  outline: none;
+  background-color: #1f2222;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  border: 1px solid #2c3131;
 }
 
 .search-sidebar .input-group {
@@ -273,14 +279,19 @@ html, body {
   right: 0;
   background-color: #181b1b;
   border-radius: 5px;
-  margin-top: 4px;
+  /* border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px; */
+  /* margin-top: 4px; */
+  /* shift 0.5rem to the top */
+  margin-top: -0.4rem;
   max-height: 200px;
   overflow-y: auto;
   z-index: 1000;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .autocomplete-item {
+  font-size: 0.8rem;
   padding: 8px 12px;
   cursor: pointer;
   text-align: left;
@@ -288,4 +299,15 @@ html, body {
 
 .autocomplete-item:hover {
   background-color: #222626;
+}
+
+/* Remove number input spinners */
+.search-sidebar input[type="number"]::-webkit-inner-spin-button,
+.search-sidebar input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.search-sidebar input[type="number"] {
+  -moz-appearance: textfield; /* Firefox */
 }
