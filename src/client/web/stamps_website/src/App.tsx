@@ -108,27 +108,33 @@ function App() {
 
   return (
     <div className="App">
-      <h1 className='title'>Stamp Collection Search</h1>
+      <div className="title">Stamp Collection Search</div>
       
-      <SearchBar onSearch={fetchStamps} />
+      <div className="main-container">
+        <div className="search-sidebar">
+          <SearchBar onSearch={fetchStamps} />
+        </div>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+        <div className="results-container">
+          {error && <p className="error-message">{error}</p>}
 
-      <div>
-        <h2>Search Results:</h2>
-        <div className="stamps-container">
-          {stamps.length > 0 ? (
-            stamps.map((stamp, index) => (
-              <StampCard 
-                key={stamp.stamp_id}
-                country={stamp.country}
-                name={stamp.name}
-                imageLink={imageLinks[index] || null}
-              />
-            ))
-          ) : (
-            <p>No stamps found matching your search criteria.</p>
-          )}
+          <div>
+            <h2 className="search-results-title">Search Results:</h2>
+            <div className="stamps-container">
+              {stamps.length > 0 ? (
+                stamps.map((stamp, index) => (
+                  <StampCard 
+                    key={stamp.stamp_id}
+                    country={stamp.country}
+                    name={stamp.name}
+                    imageLink={imageLinks[index] || null}
+                  />
+                ))
+              ) : (
+                <p>No stamps found matching your search criteria.</p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

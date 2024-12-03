@@ -65,9 +65,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
+    <div style={{ padding: '0px', maxWidth: '600px', margin: '0 auto' }}>
       <form onSubmit={handleSubmit}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start'}}>
+            <div style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '10px' }}>Search</div>
           <input
             type="text"
             placeholder="Username"
@@ -82,7 +83,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             onChange={(e) => handleChange('country', e.target.value)}
           />
 
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '10px', width: '100%'}}>
             <input
               type="number"
               placeholder="Year From"
@@ -151,7 +152,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             onChange={(e) => handleChange('number_issued', e.target.value ? Number(e.target.value) : null)}
           />
 
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '10px', width: '100%'}}>
             <input
               type="number"
               placeholder="Perforation Horizontal"
@@ -180,7 +181,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             onChange={(e) => handleChange('sheet_size_amount', e.target.value ? Number(e.target.value) : null)}
           />
 
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '10px', width: '100%'}}>
             <input
               type="number"
               placeholder="Sheet Size Horizontal"
@@ -195,7 +196,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '10px', width: '100%'}}>
             <input
               type="number"
               placeholder="Stamp Size Horizontal"
