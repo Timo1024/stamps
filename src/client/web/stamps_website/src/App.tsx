@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import './App.css';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import './App.css';
 
 import StampCard from './components/StampCard';
 import SearchBar from './components/SearchBar';
+import HuePicker from './components/HuePicker';
 
 interface Stamp {
   added_at: string;
@@ -85,6 +86,8 @@ function App() {
   const [stamps, setStamps] = useState<Stamp[]>([]);
   const [error, setError] = useState<string>('');
   const [imageLinks, setImageLinks] = useState<string[]>([]);
+  const [hue, setHue] = useState(0);
+  const [saturation, setSaturation] = useState(100);
 
   const fetchStamps = async (payload: SearchPayload) => {
     try {
@@ -106,6 +109,7 @@ function App() {
     }
   };
 
+
   return (
     <div className="App">
       <div className="title">Stamp Collection Search</div>
@@ -113,6 +117,17 @@ function App() {
       <div className="main-container">
         <div className="search-sidebar">
           <SearchBar onSearch={fetchStamps} />
+          <div style={{ padding: '20px' }}>
+            <h3>Color Search</h3>
+            <HuePicker 
+              value={hue} 
+              saturation={saturation}
+              onChange={(newHue, newSaturation) => {
+                setHue(newHue);
+                setSaturation(newSaturation);
+              }} 
+            />
+          </div>
         </div>
 
         <div className="results-container">
