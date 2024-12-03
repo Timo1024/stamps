@@ -242,7 +242,7 @@ def search_stamps():
                 r2, g2, b2 = hex_to_rgb(color2)
                 return ((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2) ** 0.5
 
-            def is_color_match(target_color, color_palette, delta=30):
+            def is_color_match(target_color, color_palette, delta=100):
                 if not color_palette:
                     return False
                 try:
