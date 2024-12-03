@@ -301,6 +301,29 @@ html, body {
   background-color: #222626;
 }
 
+.color-picker-container {
+  position: relative;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.color-picker-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background-color: #181b1b;
+  border: 1px solid #2c3131;
+  border-radius: 5px;
+  padding: 10px;
+  z-index: 1000;
+  margin-top: 5px;
+}
+
+.color-display:hover {
+  background-color: #1f2222;
+}
+
 /* Remove number input spinners */
 .search-sidebar input[type="number"]::-webkit-inner-spin-button,
 .search-sidebar input[type="number"]::-webkit-outer-spin-button {

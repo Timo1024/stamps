@@ -211,6 +211,9 @@ def search_stamps():
             conditions.append("s.height = %s")
             params.append(search_params['stamp_size_vertical'])
 
+        if search_params.get('color'):
+            conditions.append("s.color_palette IS NOT NULL")
+
         # Add WHERE clause if there are conditions
         if conditions:
             query += " WHERE " + " AND ".join(conditions)
@@ -227,6 +230,32 @@ def search_stamps():
             # Convert date objects to string format
             if stamp.get('date_of_issue'):
                 stamp['date_of_issue'] = stamp['date_of_issue'].isoformat()
+
+        # Filter by color if specified
+        if search_params.get('color'):
+            def hex_to_rgb(hex_color):
+                hex_color = hex_color.lstrip('#')
+                return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+
+            def color_distance(color1, color2):
+                r1, g1, b1 = hex_to_rgb(color1)
+                r2, g2, b2 = hex_to_rgb(color2)
+                return ((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2) ** 0.5
+
+            def is_color_match(target_color, color_palette, delta=30):
+                if not color_palette:
+                    return False
+                try:
+                    colors = eval(color_palette)
+                    return any(color_distance(target_color, color) <= delta for color in colors)
+                except:
+                    return False
+
+            target_color = search_params['color']
+            stamps = [
+                row for row in stamps 
+                if is_color_match(target_color, row.get('color_palette'))
+            ]
 
         cursor.close()
         connection.close()
