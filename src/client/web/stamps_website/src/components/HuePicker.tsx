@@ -8,16 +8,17 @@ interface HuePickerProps {
   onToleranceChange: (tolerance: number) => void;
 }
 
-const HuePicker: React.FC<HuePickerProps> = ({ 
-  value, 
-  saturation, 
+const HuePicker: React.FC<HuePickerProps> = ({
+  value,
+  saturation,
   onChange,
   baseTolerance,
-  onToleranceChange 
+  onToleranceChange,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wheelImageRef = useRef<ImageData | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const size = 200; // Size of the color wheel
   const radius = size / 2;
   const deadZoneRadius = radius * 0.15; // 15% of the radius will be the "dead zone"
@@ -78,11 +79,10 @@ const HuePicker: React.FC<HuePickerProps> = ({
     };
   }, []);
 
-  // Draw static color wheel once
+  // Initialize color wheel
   useEffect(() => {
+    if (!canvasRef.current || !isOpen) return;
     const canvas = canvasRef.current;
-    if (!canvas) return;
-
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
@@ -90,12 +90,16 @@ const HuePicker: React.FC<HuePickerProps> = ({
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
 
-    // Create temporary canvas for the wheel
+    // Create temporary canvas for better anti-aliasing
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = size;
     tempCanvas.height = size;
     const tempCtx = tempCanvas.getContext('2d');
     if (!tempCtx) return;
+
+    // Enable anti-aliasing on temp canvas
+    tempCtx.imageSmoothingEnabled = true;
+    tempCtx.imageSmoothingQuality = 'high';
 
     // Create circular clip path
     tempCtx.beginPath();
@@ -106,18 +110,17 @@ const HuePicker: React.FC<HuePickerProps> = ({
     // Draw color wheel
     for (let x = 0; x < size; x++) {
       for (let y = 0; y < size; y++) {
-        // Calculate distance from center
         const dx = x - radius;
         const dy = y - radius;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
         // Only draw within the circle with a smooth fade at both edges
-        if (distance <= radius + 1.5) { 
+        if (distance <= radius + 1.5) {
           // Calculate base alpha for edge fading
           let alpha = 1;
-          
+
           // Fade at outer edge
-          if (distance > radius - 1.5) { 
+          if (distance > radius - 1.5) {
             alpha = Math.max(0, 1 - (distance - (radius - 1.5)) / 1.5);
           }
 
@@ -129,7 +132,7 @@ const HuePicker: React.FC<HuePickerProps> = ({
             // Calculate saturation based on distance from center
             const pixelSaturation = (distance / radius) * 100;
 
-            // Add smooth transition at dead zone border (slightly wider transition)
+            // Add smooth transition at dead zone border
             const deadZoneTransition = Math.max(0, Math.min(1, (distance - deadZoneRadius) / 1.5));
             
             tempCtx.fillStyle = `hsla(${hue}, ${pixelSaturation}%, 50%, ${alpha * deadZoneTransition})`;
@@ -141,8 +144,8 @@ const HuePicker: React.FC<HuePickerProps> = ({
 
     // Draw subtle dead zone border with gradient
     const gradient = tempCtx.createRadialGradient(
-      radius, radius, deadZoneRadius - 0.75, 
-      radius, radius, deadZoneRadius + 0.75  
+      radius, radius, deadZoneRadius - 0.75,
+      radius, radius, deadZoneRadius + 0.75
     );
     gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
     gradient.addColorStop(0.5, 'rgba(0, 0, 0, 0.1)');
@@ -154,17 +157,44 @@ const HuePicker: React.FC<HuePickerProps> = ({
     tempCtx.lineWidth = 2;
     tempCtx.stroke();
 
-    // Store the wheel image for reuse
-    wheelImageRef.current = tempCtx.getImageData(0, 0, size, size);
-  }, []); // Only run once on mount
+    // Copy to main canvas and store for reuse
+    ctx.drawImage(tempCanvas, 0, 0);
+    wheelImageRef.current = ctx.getImageData(0, 0, size, size);
+  }, [isOpen]);
 
-  // Draw indicator and tolerance overlay on top of wheel
+  // Update selected point
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvasRef.current || !wheelImageRef.current || !isOpen) return;
+    const ctx = canvasRef.current.getContext('2d');
+    if (!ctx) return;
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx || !wheelImageRef.current) return;
+    // Clear and redraw wheel
+    ctx.clearRect(0, 0, size, size);
+    ctx.putImageData(wheelImageRef.current, 0, 0);
+
+    // Draw selected color indicator at exact position
+    const angle = (value - 180) * (Math.PI / 180);
+    const indicatorDistance = (saturation / 100) * radius;
+    const indicatorX = radius + Math.cos(angle) * indicatorDistance;
+    const indicatorY = radius + Math.sin(angle) * indicatorDistance;
+
+    // Only draw indicator if outside dead zone
+    if (indicatorDistance > deadZoneRadius) {
+      ctx.beginPath();
+      ctx.arc(indicatorX, indicatorY, 5, 0, Math.PI * 2);
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = `hsl(${value}, ${saturation}%, 50%)`;
+      ctx.fill();
+    }
+  }, [value, saturation, isOpen]);
+
+  // Draw tolerance overlay
+  useEffect(() => {
+    if (!canvasRef.current || !wheelImageRef.current || !isOpen) return;
+    const ctx = canvasRef.current.getContext('2d');
+    if (!ctx) return;
 
     // Clear and redraw wheel
     ctx.clearRect(0, 0, size, size);
@@ -269,49 +299,78 @@ const HuePicker: React.FC<HuePickerProps> = ({
     // ctx.font = '12px Arial';
     // ctx.textAlign = 'center';
     // ctx.fillText(`Tolerance: ±${Math.round(adjustedTolerance)}°`, radius, size - 10);
-  }, [value, saturation, baseTolerance]);
+  }, [value, saturation, baseTolerance, isOpen]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-      <div style={{ 
-        width: size, 
-        height: size, 
-        borderRadius: '50%',
-        overflow: 'hidden',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-        background: '#222626'
-      }}>
-        <canvas
-          ref={canvasRef}
-          width={size}
-          height={size}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          style={{ cursor: 'pointer' }}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => setIsOpen(!isOpen)}>
+        <div
+          style={{
+            width: '24px',
+            height: '24px',
+            borderRadius: '4px',
+            backgroundColor: `hsl(${value}, ${saturation}%, 50%)`,
+            border: '1px solid #ccc',
+          }}
         />
-      </div>
-      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '5px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666' }}>
-          <div
-            style={{
-              width: '24px',
-              height: '24px',
-              borderRadius: '4px',
-              backgroundColor: `hsl(${value}, ${saturation}%, 50%)`,
-              border: '1px solid #ccc',
-            }}
-          />
-          <span>Tolerance: {Math.round(baseTolerance)}° (Max: {Math.round(baseTolerance * 3)}°)</span>
+        <div style={{ 
+          transform: `rotate(${isOpen ? '180deg' : '0deg'})`,
+          transition: 'transform 0.3s ease',
+          fontSize: '20px'
+        }}>
+          ▼
         </div>
-        <input
-          type="range"
-          min="5"
-          max="30"
-          value={baseTolerance}
-          onChange={(e) => onToleranceChange(Number(e.target.value))}
-          style={{ width: '100%' }}
-        />
       </div>
+      
+      {isOpen && (
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          gap: '20px',
+          transition: 'all 0.3s ease',
+        }}>
+          <div style={{ 
+            width: size, 
+            height: size, 
+            borderRadius: '50%',
+            overflow: 'hidden',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+            background: '#222626'
+          }}>
+            <canvas
+              ref={canvasRef}
+              width={size}
+              height={size}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              style={{ cursor: 'pointer' }}
+            />
+          </div>
+          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666' }}>
+              <div
+                style={{
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '4px',
+                  backgroundColor: `hsl(${value}, ${saturation}%, 50%)`,
+                  border: '1px solid #ccc',
+                }}
+              />
+              <span>Tolerance: {Math.round(baseTolerance)}° (Max: {Math.round(baseTolerance * 3)}°)</span>
+            </div>
+            <input
+              type="range"
+              min="5"
+              max="30"
+              value={baseTolerance}
+              onChange={(e) => onToleranceChange(Number(e.target.value))}
+              style={{ width: '100%' }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
