@@ -180,6 +180,30 @@ html, body {
   overflow-y: auto;
   box-sizing: border-box;
   border-radius: 0 10px 10px 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(155, 155, 155, 0.5) transparent;
+  scrollbar-gutter: stable;
+}
+
+.search-sidebar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.search-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.search-sidebar::-webkit-scrollbar-thumb {
+  background-color: rgba(155, 155, 155, 0.5);
+  border-radius: 4px;
+}
+
+.search-sidebar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(155, 155, 155, 0.7);
+}
+
+.search-sidebar::-webkit-scrollbar-button {
+  display: none;
 }
 
 .search-sidebar form {

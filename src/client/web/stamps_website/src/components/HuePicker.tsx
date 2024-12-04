@@ -306,13 +306,19 @@ const HuePicker: React.FC<HuePickerProps> = ({
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => setIsOpen(!isOpen)}>
         <div
           style={{
-            width: '24px',
-            height: '24px',
+            width: '100%',
+            height: '2rem',
             borderRadius: '4px',
             backgroundColor: `hsl(${value}, ${saturation}%, 50%)`,
-            border: '1px solid #ccc',
+            border: `1px solid hsl(${value}, ${saturation}%, 50%)`,
+            justifyContent: 'flex-start',
+            alignItems: 'center',
+            display: 'flex',
+            paddingLeft: '10px',
           }}
-        />
+              >
+            <div style={{ color: '#181b1b' }}>Color</div>
+        </div>
         <div style={{ 
           transform: `rotate(${isOpen ? '180deg' : '0deg'})`,
           transition: 'transform 0.3s ease',

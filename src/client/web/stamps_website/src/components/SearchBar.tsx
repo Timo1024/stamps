@@ -276,8 +276,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
 
           <div style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '10px' }}>Advanced Search Options</div>
 
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ marginBottom: '10px', fontWeight: 'bold' }}>Color:</div>
+          <div style={{ marginBottom: '20px', width: '100%' }}>
+            {/* <div style={{ marginBottom: '10px', fontWeight: 'bold' }}>Color:</div> */}
             <HuePicker
               value={searchParams.hue || 0}
               saturation={searchParams.saturation || 100}
