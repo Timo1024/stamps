@@ -229,11 +229,11 @@ def search_stamps():
             """)
             
             cursor.execute("""
-                CREATE FUNCTION are_colors_similar(hex_color VARCHAR(50), target_hue FLOAT, target_sat FLOAT, tolerance FLOAT)
+                CREATE FUNCTION are_colors_similar(hex_color VARCHAR(50), target_hue FLOAT, target_sat FLOAT, base_tolerance FLOAT)
                 RETURNS BOOLEAN
                 DETERMINISTIC
                 BEGIN
-                    DECLARE r, g, b, max_val, min_val, h, s, delta, hue_diff FLOAT;
+                    DECLARE r, g, b, max_val, min_val, h, s, delta, hue_diff, adjusted_tolerance FLOAT;
                     DECLARE clean_hex VARCHAR(50);
                     
                     -- Clean and validate the hex color
@@ -282,13 +282,24 @@ def search_stamps():
                         SET s = (delta / max_val) * 100;
                     END IF;
                     
-                    -- Compare hue and saturation with tolerance
+                    -- Adjust tolerance based on delta
+                    -- For low delta (grayish colors), be more lenient with both hue and saturation
+                    -- For high delta (vivid colors), be more strict
+                    SET adjusted_tolerance = base_tolerance * (1 + (1 - delta) * 2);
+                    
+                    -- Compare hue and saturation with adjusted tolerance
+                    -- For very low saturation colors (near grayscale), be more lenient with hue
                     SET hue_diff = ABS(h - target_hue);
                     IF hue_diff > 180 THEN
                         SET hue_diff = 360 - hue_diff;
                     END IF;
                     
-                    RETURN hue_diff <= tolerance AND ABS(s - target_sat) <= tolerance;
+                    -- For low saturation colors, hue becomes less important
+                    IF s < 10 OR target_sat < 10 THEN
+                        RETURN ABS(s - target_sat) <= adjusted_tolerance;
+                    END IF;
+                    
+                    RETURN hue_diff <= adjusted_tolerance AND ABS(s - target_sat) <= adjusted_tolerance;
                 END;
             """)
             
