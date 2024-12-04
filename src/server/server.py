@@ -210,11 +210,13 @@ def search_stamps():
                 s.mint_condition_float, s.unused_float, s.used_float, s.letter_fdc_float,
                 st.name as set_name, st.year, st.country, st.category,
                 u.amount_used, u.amount_unused, u.amount_letter_fdc
-            FROM stamps s
-            JOIN sets st ON s.set_id = st.set_id
+            FROM sets st
+            INNER JOIN stamps s ON s.set_id = st.set_id
             LEFT JOIN user_stamps u ON s.stamp_id = u.stamp_id
             WHERE {' AND '.join(conditions)}
+            AND st.country LIKE %s
         """
+        params.append('%DDR%')  # Add the country filter parameter
 
         # If color filtering is needed, wrap the base query in a subquery
         if search_params.get('hue') is not None and search_params.get('saturation') is not None:
@@ -292,29 +294,47 @@ def search_stamps():
             
             # Wrap the base query and add color filtering
             final_query = f"""
-                WITH filtered_stamps AS ({base_query})
-                SELECT *
-                FROM filtered_stamps
+                WITH RECURSIVE
+                numbers AS (
+                    SELECT 1 as n
+                    UNION ALL
+                    SELECT n + 1 FROM numbers WHERE n < 5  -- Most color palettes have 5 colors
+                ),
+                base_results AS ({base_query}),
+                valid_stamps AS (
+                    SELECT * FROM base_results 
+                    WHERE color_palette IS NOT NULL 
+                    AND color_palette != '[]'
+                ),
+                color_split AS (
+                    SELECT 
+                        stamp_id,
+                        TRIM(BOTH ' #' FROM SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(BOTH '[]' FROM REPLACE(color_palette, "'", '')), ',', n), ',', -1)) as color
+                    FROM valid_stamps
+                    CROSS JOIN numbers
+                    WHERE n <= (LENGTH(color_palette) - LENGTH(REPLACE(color_palette, ',', '')) + 1)
+                )
+                SELECT DISTINCT vs.*
+                FROM valid_stamps vs
                 WHERE EXISTS (
-                    SELECT 1
-                    FROM (
-                        SELECT TRIM(BOTH ' ' FROM SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(BOTH '[]' FROM REPLACE(color_palette, "'", '')), ',', numbers.n), ',', -1)) as color
-                        FROM (
-                            SELECT 1 + units.i + tens.i * 10 as n
-                            FROM (SELECT 0 i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units,
-                                 (SELECT 0 i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens
-                            WHERE 1 + units.i + tens.i * 10 <= 100
-                        ) numbers
-                        WHERE numbers.n <= (LENGTH(color_palette) - LENGTH(REPLACE(color_palette, ',', '')) + 1)
-                    ) colors
-                    WHERE color != '' AND are_colors_similar(color, {target_hue}, {target_saturation}, 10)
+                    SELECT 1 FROM color_split cs
+                    WHERE cs.stamp_id = vs.stamp_id
+                    AND cs.color != ''
+                    AND are_colors_similar(CONCAT('#', cs.color), {target_hue}, {target_saturation}, 10)
                 )
                 ORDER BY year DESC, stamp_id DESC
             """
         else:
             final_query = f"{base_query} ORDER BY st.year DESC, s.stamp_id DESC"
 
-        # Execute the query and fetch results
+        # First analyze the query execution plan
+        cursor.execute(f"EXPLAIN ANALYZE {final_query}", params)
+        explain_results = cursor.fetchall()
+        print("\nQuery Execution Plan:")
+        for row in explain_results:
+            print(row)
+
+        # Then execute the actual query
         cursor.execute(final_query, params)
         stamps = cursor.fetchall()
 
