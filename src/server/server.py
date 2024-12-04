@@ -2,7 +2,8 @@ from flask import Flask, jsonify, send_from_directory, request
 from flask_cors import CORS
 import mysql.connector
 import json
-
+import re
+import colorsys
 from utils.database_helpers import get_user_id_by_username, get_db_connection
 
 app = Flask(__name__)
@@ -112,23 +113,16 @@ def search_stamps():
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
 
-        # Start building the base query
-        query = """
-            SELECT DISTINCT s.*, st.*, u.amount_used, u.amount_unused, u.amount_letter_fdc
-            FROM stamps s
-            JOIN sets st ON s.set_id = st.set_id
-            LEFT JOIN user_stamps u ON s.stamp_id = u.stamp_id
-        """
-        conditions = []
+        # Initialize conditions and parameters for the query
+        conditions = ["1=1"]  # Base condition that's always true
         params = []
 
-        # Add user condition if username is provided
+        # Add non-color conditions first
         if search_params.get('username'):
-            query += " LEFT JOIN users usr ON u.user_id = usr.user_id"
+            query = " LEFT JOIN users usr ON u.user_id = usr.user_id"
             conditions.append("usr.username = %s")
             params.append(search_params['username'])
 
-        # Add conditions for each search parameter
         if search_params.get('country'):
             conditions.append("st.country LIKE %s")
             params.append(f"%{search_params['country']}%")
@@ -158,14 +152,6 @@ def search_stamps():
                 params.extend([f"%{keyword}%"] * 3)
             if keyword_conditions:
                 conditions.append(f"({' OR '.join(keyword_conditions)})")
-
-        if search_params.get('colors'):
-            color_conditions = []
-            for color in search_params['colors']:
-                color_conditions.append("s.color LIKE %s")
-                params.append(f"%{color}%")
-            if color_conditions:
-                conditions.append(f"({' OR '.join(color_conditions)})")
 
         if search_params.get('date_of_issue'):
             conditions.append("s.date_of_issue = %s")
@@ -211,18 +197,125 @@ def search_stamps():
             conditions.append("s.height = %s")
             params.append(search_params['stamp_size_vertical'])
 
-        if search_params.get('color'):
-            conditions.append("s.color_palette IS NOT NULL")
+        # Build the base query with all non-color conditions
+        base_query = f"""
+            SELECT DISTINCT 
+                s.stamp_id, s.number, s.type, s.denomination, s.description,
+                s.date_of_issue, s.color_palette, s.perforations,
+                s.perforation_horizontal, s.perforation_vertical, s.perforation_keyword,
+                s.sheet_size, s.sheet_size_amount, s.sheet_size_x, s.sheet_size_y,
+                s.height_width, s.height, s.width, s.number_issued,
+                s.value_from, s.value_to, s.image_path, s.set_id,
+                s.mint_condition, s.unused, s.used, s.letter_fdc,
+                s.mint_condition_float, s.unused_float, s.used_float, s.letter_fdc_float,
+                st.name as set_name, st.year, st.country, st.category,
+                u.amount_used, u.amount_unused, u.amount_letter_fdc
+            FROM stamps s
+            JOIN sets st ON s.set_id = st.set_id
+            LEFT JOIN user_stamps u ON s.stamp_id = u.stamp_id
+            WHERE {' AND '.join(conditions)}
+        """
 
-        # Add WHERE clause if there are conditions
-        if conditions:
-            query += " WHERE " + " AND ".join(conditions)
+        # If color filtering is needed, wrap the base query in a subquery
+        if search_params.get('hue') is not None and search_params.get('saturation') is not None:
+            target_hue = search_params['hue']
+            target_saturation = search_params['saturation']
+            
+            # Create color matching function
+            cursor.execute("""
+                DROP FUNCTION IF EXISTS are_colors_similar;
+            """)
+            
+            cursor.execute("""
+                CREATE FUNCTION are_colors_similar(hex_color VARCHAR(50), target_hue FLOAT, target_sat FLOAT, tolerance FLOAT)
+                RETURNS BOOLEAN
+                DETERMINISTIC
+                BEGIN
+                    DECLARE r, g, b, max_val, min_val, h, s, delta, hue_diff FLOAT;
+                    DECLARE clean_hex VARCHAR(50);
+                    
+                    -- Clean and validate the hex color
+                    SET clean_hex = TRIM(BOTH ' ' FROM hex_color);
+                    IF LENGTH(clean_hex) < 7 OR LEFT(clean_hex, 1) != '#' THEN
+                        RETURN FALSE;
+                    END IF;
+                    
+                    -- Extract just the first 7 characters for a valid hex color
+                    SET clean_hex = LEFT(clean_hex, 7);
+                    
+                    -- Validate hex digits
+                    IF NOT (clean_hex REGEXP '^#[0-9A-Fa-f]{6}$') THEN
+                        RETURN FALSE;
+                    END IF;
+                    
+                    -- Convert hex to RGB
+                    SET r = CONV(SUBSTRING(clean_hex, 2, 2), 16, 10) / 255;
+                    SET g = CONV(SUBSTRING(clean_hex, 4, 2), 16, 10) / 255;
+                    SET b = CONV(SUBSTRING(clean_hex, 6, 2), 16, 10) / 255;
+                    
+                    -- Find max and min values
+                    SET max_val = GREATEST(r, g, b);
+                    SET min_val = LEAST(r, g, b);
+                    SET delta = max_val - min_val;
+                    
+                    -- Calculate hue
+                    IF delta = 0 THEN
+                        SET h = 0;
+                    ELSEIF max_val = r THEN
+                        SET h = 60 * (MOD((g - b) / delta, 6));
+                    ELSEIF max_val = g THEN
+                        SET h = 60 * ((b - r) / delta + 2);
+                    ELSE
+                        SET h = 60 * ((r - g) / delta + 4);
+                    END IF;
+                    
+                    IF h < 0 THEN
+                        SET h = h + 360;
+                    END IF;
+                    
+                    -- Calculate saturation
+                    IF max_val = 0 THEN
+                        SET s = 0;
+                    ELSE
+                        SET s = (delta / max_val) * 100;
+                    END IF;
+                    
+                    -- Compare hue and saturation with tolerance
+                    SET hue_diff = ABS(h - target_hue);
+                    IF hue_diff > 180 THEN
+                        SET hue_diff = 360 - hue_diff;
+                    END IF;
+                    
+                    RETURN hue_diff <= tolerance AND ABS(s - target_sat) <= tolerance;
+                END;
+            """)
+            
+            # Wrap the base query and add color filtering
+            final_query = f"""
+                WITH filtered_stamps AS ({base_query})
+                SELECT *
+                FROM filtered_stamps
+                WHERE EXISTS (
+                    SELECT 1
+                    FROM (
+                        SELECT TRIM(BOTH ' ' FROM SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(BOTH '[]' FROM REPLACE(color_palette, "'", '')), ',', numbers.n), ',', -1)) as color
+                        FROM (
+                            SELECT 1 + units.i + tens.i * 10 as n
+                            FROM (SELECT 0 i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units,
+                                 (SELECT 0 i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens
+                            WHERE 1 + units.i + tens.i * 10 <= 100
+                        ) numbers
+                        WHERE numbers.n <= (LENGTH(color_palette) - LENGTH(REPLACE(color_palette, ',', '')) + 1)
+                    ) colors
+                    WHERE color != '' AND are_colors_similar(color, {target_hue}, {target_saturation}, 10)
+                )
+                ORDER BY year DESC, stamp_id DESC
+            """
+        else:
+            final_query = f"{base_query} ORDER BY st.year DESC, s.stamp_id DESC"
 
-        # Add ordering
-        query += " ORDER BY st.year DESC, s.stamp_id DESC"
-
-        # Execute query with parameters
-        cursor.execute(query, params)
+        # Execute the query and fetch results
+        cursor.execute(final_query, params)
         stamps = cursor.fetchall()
 
         # Process the results
@@ -230,32 +323,6 @@ def search_stamps():
             # Convert date objects to string format
             if stamp.get('date_of_issue'):
                 stamp['date_of_issue'] = stamp['date_of_issue'].isoformat()
-
-        # Filter by color if specified
-        if search_params.get('color'):
-            def hex_to_rgb(hex_color):
-                hex_color = hex_color.lstrip('#')
-                return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
-
-            def color_distance(color1, color2):
-                r1, g1, b1 = hex_to_rgb(color1)
-                r2, g2, b2 = hex_to_rgb(color2)
-                return ((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2) ** 0.5
-
-            def is_color_match(target_color, color_palette, delta=100):
-                if not color_palette:
-                    return False
-                try:
-                    colors = eval(color_palette)
-                    return any(color_distance(target_color, color) <= delta for color in colors)
-                except:
-                    return False
-
-            target_color = search_params['color']
-            stamps = [
-                row for row in stamps 
-                if is_color_match(target_color, row.get('color_palette'))
-            ]
 
         cursor.close()
         connection.close()
@@ -267,6 +334,34 @@ def search_stamps():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+def hex_to_hsl(hex_color):
+    # Remove the hash if it exists
+    hex_color = hex_color.lstrip('#')
+    
+    # Convert hex to RGB
+    r = int(hex_color[0:2], 16) / 255.0
+    g = int(hex_color[2:4], 16) / 255.0
+    b = int(hex_color[4:6], 16) / 255.0
+    
+    # Convert RGB to HSL
+    h, l, s = colorsys.rgb_to_hls(r, g, b)
+    
+    # Convert to degrees and percentages
+    h = h * 360
+    s = s * 100
+    l = l * 100
+    
+    return h, s, l
+
+def are_colors_similar(h1, s1, h2, s2, tolerance=10):
+    # Handle circular nature of hue
+    hue_diff = abs(h1 - h2)
+    if hue_diff > 180:
+        hue_diff = 360 - hue_diff
+    
+    # Compare both hue and saturation with tolerance
+    return hue_diff <= tolerance and abs(s1 - s2) <= tolerance
 
 if __name__ == '__main__':
     app.run(debug=True)
