@@ -170,6 +170,23 @@ const HuePicker: React.FC<HuePickerProps> = ({
     ctx.clearRect(0, 0, size, size);
     ctx.putImageData(wheelImageRef.current, 0, 0);
 
+    // Draw selected color indicator at exact position
+    const angle = (value - 180) * (Math.PI / 180);
+    const indicatorDistance = (saturation / 100) * radius;
+    const indicatorX = radius + Math.cos(angle) * indicatorDistance;
+    const indicatorY = radius + Math.sin(angle) * indicatorDistance;
+
+    // Only draw indicator if outside dead zone
+    if (indicatorDistance > deadZoneRadius) {
+      ctx.beginPath();
+      ctx.arc(indicatorX, indicatorY, 5, 0, Math.PI * 2);
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = `hsl(${value}, ${saturation}%, 50%)`;
+      ctx.fill();
+    }
+
     // Calculate delta based on current HSL color
     const calculateDelta = (h: number, s: number): number => {
       // Convert HSL to RGB to calculate delta
@@ -247,23 +264,6 @@ const HuePicker: React.FC<HuePickerProps> = ({
     // Draw to main canvas
     ctx.drawImage(tempCanvas, 0, 0);
 
-    // Draw selected color indicator at exact position
-    const angle = (value - 180) * (Math.PI / 180);
-    const indicatorDistance = (saturation / 100) * radius;
-    const indicatorX = radius + Math.cos(angle) * indicatorDistance;
-    const indicatorY = radius + Math.sin(angle) * indicatorDistance;
-
-    // Only draw indicator if outside dead zone
-    if (indicatorDistance > deadZoneRadius) {
-      ctx.beginPath();
-      ctx.arc(indicatorX, indicatorY, 5, 0, Math.PI * 2);
-      ctx.strokeStyle = 'white';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.fillStyle = `hsl(${value}, ${saturation}%, 50%)`;
-      ctx.fill();
-    }
-
     // Add tolerance info text
     // ctx.fillStyle = '#666';
     // ctx.font = '12px Arial';
@@ -292,8 +292,16 @@ const HuePicker: React.FC<HuePickerProps> = ({
       </div>
       <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '5px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666' }}>
-          <span>Tolerance: {Math.round(baseTolerance)}°</span>
-          <span>{Math.round(baseTolerance * 3)}° max</span>
+          <div
+            style={{
+              width: '24px',
+              height: '24px',
+              borderRadius: '4px',
+              backgroundColor: `hsl(${value}, ${saturation}%, 50%)`,
+              border: '1px solid #ccc',
+            }}
+          />
+          <span>Tolerance: {Math.round(baseTolerance)}° (Max: {Math.round(baseTolerance * 3)}°)</span>
         </div>
         <input
           type="range"
