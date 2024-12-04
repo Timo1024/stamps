@@ -23,6 +23,7 @@ interface SearchPayload {
   stamp_size_vertical: number | null;
   hue: number | null;
   saturation: number | null;
+  tolerance: number | null;
 }
 
 interface SearchBarProps {
@@ -52,7 +53,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     stamp_size_horizontal: null,
     stamp_size_vertical: null,
     hue: 0,
-    saturation: 100
+    saturation: 100,
+    tolerance: 10
   });
 
   const [countries, setCountries] = useState<string[]>([]);
@@ -153,6 +155,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     onSearch(searchParams);
+  };
+
+  const handleToleranceChange = (tolerance: number) => {
+    handleChange('tolerance', tolerance);
   };
 
   return (
@@ -282,6 +288,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
                   saturation,
                 }));
               }}
+              baseTolerance={searchParams.tolerance || 10}
+              onToleranceChange={handleToleranceChange}
             />
           </div>
 

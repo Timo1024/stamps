@@ -4,14 +4,16 @@ interface HuePickerProps {
   value: number;
   saturation: number;
   onChange: (hue: number, saturation: number) => void;
-  baseTolerance?: number; // Optional base tolerance value
+  baseTolerance: number;
+  onToleranceChange: (tolerance: number) => void;
 }
 
 const HuePicker: React.FC<HuePickerProps> = ({ 
   value, 
   saturation, 
-  onChange, 
-  baseTolerance = 10 
+  onChange,
+  baseTolerance,
+  onToleranceChange 
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wheelImageRef = useRef<ImageData | null>(null);
@@ -263,21 +265,21 @@ const HuePicker: React.FC<HuePickerProps> = ({
     }
 
     // Add tolerance info text
-    ctx.fillStyle = '#666';
-    ctx.font = '12px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(`Tolerance: ±${Math.round(adjustedTolerance)}°`, radius, size - 10);
+    // ctx.fillStyle = '#666';
+    // ctx.font = '12px Arial';
+    // ctx.textAlign = 'center';
+    // ctx.fillText(`Tolerance: ±${Math.round(adjustedTolerance)}°`, radius, size - 10);
   }, [value, saturation, baseTolerance]);
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
       <div style={{ 
         width: size, 
         height: size, 
         borderRadius: '50%',
         overflow: 'hidden',
         boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-        background: '#222626'  // Match search sidebar background
+        background: '#222626'
       }}>
         <canvas
           ref={canvasRef}
@@ -288,18 +290,19 @@ const HuePicker: React.FC<HuePickerProps> = ({
           style={{ cursor: 'pointer' }}
         />
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        <div style={{
-          width: '60px',
-          height: '60px',
-          borderRadius: '8px',
-          backgroundColor: `hsl(${value}, ${saturation}%, 50%)`,
-          border: '2px solid #ddd',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-        }} />
-        <div style={{ fontSize: '14px', color: '#666' }}>
-          HSL({Math.round(value)}, {Math.round(saturation)}%, 50%)
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666' }}>
+          <span>Tolerance: {Math.round(baseTolerance)}°</span>
+          <span>{Math.round(baseTolerance * 3)}° max</span>
         </div>
+        <input
+          type="range"
+          min="5"
+          max="30"
+          value={baseTolerance}
+          onChange={(e) => onToleranceChange(Number(e.target.value))}
+          style={{ width: '100%' }}
+        />
       </div>
     </div>
   );

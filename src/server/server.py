@@ -222,6 +222,7 @@ def search_stamps():
         if search_params.get('hue') is not None and search_params.get('saturation') is not None:
             target_hue = search_params['hue']
             target_saturation = search_params['saturation']
+            tolerance = search_params.get('tolerance', 10)  # Default tolerance of 10 degrees
             
             # Create color matching function
             cursor.execute("""
@@ -331,21 +332,14 @@ def search_stamps():
                     SELECT 1 FROM color_split cs
                     WHERE cs.stamp_id = vs.stamp_id
                     AND cs.color != ''
-                    AND are_colors_similar(CONCAT('#', cs.color), {target_hue}, {target_saturation}, 10)
+                    AND are_colors_similar(CONCAT('#', cs.color), {target_hue}, {target_saturation}, {tolerance})
                 )
                 ORDER BY year DESC, stamp_id DESC
             """
         else:
             final_query = f"{base_query} ORDER BY st.year DESC, s.stamp_id DESC"
 
-        # First analyze the query execution plan
-        cursor.execute(f"EXPLAIN ANALYZE {final_query}", params)
-        explain_results = cursor.fetchall()
-        print("\nQuery Execution Plan:")
-        for row in explain_results:
-            print(row)
-
-        # Then execute the actual query
+        # Execute the actual query
         cursor.execute(final_query, params)
         stamps = cursor.fetchall()
 
@@ -385,14 +379,54 @@ def hex_to_hsl(hex_color):
     
     return h, s, l
 
-def are_colors_similar(h1, s1, h2, s2, tolerance=10):
-    # Handle circular nature of hue
-    hue_diff = abs(h1 - h2)
-    if hue_diff > 180:
-        hue_diff = 360 - hue_diff
+def are_colors_similar(color1_hex, color2_hex, tolerance_degrees):
+    """
+    Compare two colors in HSL space with variable tolerance
+    """
+    # Convert hex to HSL
+    def hex_to_hsl(hex_color):
+        # Remove the # if present
+        hex_color = hex_color.lstrip('#')
+        # Convert hex to RGB
+        rgb = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+        # Convert RGB to HSL
+        r, g, b = [x/255.0 for x in rgb]
+        max_c = max(r, g, b)
+        min_c = min(r, g, b)
+        l = (max_c + min_c) / 2.0
+        
+        if max_c == min_c:
+            h = s = 0.0
+        else:
+            d = max_c - min_c
+            s = d / (2.0 - max_c - min_c) if l > 0.5 else d / (max_c + min_c)
+            if max_c == r:
+                h = (g - b) / d + (6.0 if g < b else 0.0)
+            elif max_c == g:
+                h = (b - r) / d + 2.0
+            else:
+                h = (r - g) / d + 4.0
+            h *= 60.0
+            if h < 0:
+                h += 360.0
+                
+        return (h, s * 100, l * 50)
+
+    # Get HSL values
+    h1, s1, _ = hex_to_hsl(color1_hex)
+    h2, s2, _ = hex_to_hsl(color2_hex)
     
-    # Compare both hue and saturation with tolerance
-    return hue_diff <= tolerance and abs(s1 - s2) <= tolerance
+    # Calculate color delta (difference in saturation)
+    delta = abs(s1 - s2) / 100.0
+    
+    # Adjust tolerance based on delta
+    adjusted_tolerance = tolerance_degrees * (1 + (1 - delta) * 2)
+    
+    # Calculate hue difference considering the circular nature of hue
+    hue_diff = min(abs(h1 - h2), 360 - abs(h1 - h2))
+    
+    # Colors are similar if within adjusted tolerance
+    return hue_diff <= adjusted_tolerance
 
 if __name__ == '__main__':
     app.run(debug=True)
