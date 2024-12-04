@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import HuePicker from './HuePicker';
 
 interface SearchPayload {
   username: string;
@@ -9,7 +10,6 @@ interface SearchPayload {
   denomination: number | null;
   theme: string | null;
   keywords: string[] | null;
-  colors: string[] | null;
   date_of_issue: string | null;
   category: string | null;
   number_issued: number | null;
@@ -21,7 +21,8 @@ interface SearchPayload {
   sheet_size_vertical: number | null;
   stamp_size_horizontal: number | null;
   stamp_size_vertical: number | null;
-  color: string | null;
+  hue: number | null;
+  saturation: number | null;
 }
 
 interface SearchBarProps {
@@ -29,7 +30,6 @@ interface SearchBarProps {
 }
 
 const categories = ['Commemorative', 'Definitive', 'Airmail', 'Special Delivery', 'Postage Due'];
-const colors = ['Red', 'Blue', 'Green', 'Yellow', 'Black', 'White', 'Brown', 'Purple', 'Orange'];
 
 export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   const [searchParams, setSearchParams] = useState<SearchPayload>({
@@ -40,7 +40,6 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     denomination: null,
     theme: null,
     keywords: null,
-    colors: null,
     date_of_issue: null,
     category: null,
     number_issued: null,
@@ -52,7 +51,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     sheet_size_vertical: null,
     stamp_size_horizontal: null,
     stamp_size_vertical: null,
-    color: null,
+    hue: 0,
+    saturation: 100
   });
 
   const [countries, setCountries] = useState<string[]>([]);
@@ -64,9 +64,6 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   const [filteredThemes, setFilteredThemes] = useState<string[]>([]);
   const [showThemeDropdown, setShowThemeDropdown] = useState(false);
   const themeContainerRef = useRef<HTMLDivElement>(null);
-
-  const [showColorPicker, setShowColorPicker] = useState(false);
-  const colorPickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Fetch countries and themes when component mounts
@@ -93,9 +90,6 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
       }
       if (themeContainerRef.current && !themeContainerRef.current.contains(event.target as Node)) {
         setShowThemeDropdown(false);
-      }
-      if (colorPickerRef.current && !colorPickerRef.current.contains(event.target as Node)) {
-        setShowColorPicker(false);
       }
     };
 
@@ -154,11 +148,6 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   const selectTheme = (theme: string) => {
     handleChange('theme', theme);
     setShowThemeDropdown(false);
-  };
-
-  const handleColorChange = (color: string | null) => {
-    handleChange('color', color);
-    setShowColorPicker(false);
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -281,92 +270,19 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
 
           <div style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '10px' }}>Advanced Search Options</div>
 
-          <div className="select-group">
-            {/* <div className="select-label">Color:</div> */}
-            <select
-              value={searchParams.colors?.[0] || ''}
-              onChange={(e) => {
-                const selectedColor = e.target.value;
-                // If selecting the same color that's already selected, clear it
-                if (searchParams.colors?.[0] === selectedColor) {
-                  handleChange('colors', null);
-                } else {
-                  handleChange('colors', [selectedColor]);
-                }
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{ marginBottom: '10px', fontWeight: 'bold' }}>Color:</div>
+            <HuePicker
+              value={searchParams.hue || 0}
+              saturation={searchParams.saturation || 100}
+              onChange={(hue, saturation) => {
+                setSearchParams(prev => ({
+                  ...prev,
+                  hue,
+                  saturation,
+                }));
               }}
-              className="select-input"
-            >
-              <option value="">Select a color</option>
-              {colors.map(color => (
-                <option key={color} value={color}>{color}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="color-picker-container" ref={colorPickerRef}>
-            <div 
-              className="color-display" 
-              onClick={() => setShowColorPicker(!showColorPicker)}
-              style={{
-                backgroundColor: searchParams.color || '#ffffff',
-                border: '1px solid #2c3131',
-                width: '100%',
-                height: '40px',
-                borderRadius: '5px',
-                cursor: 'pointer',
-                position: 'relative',
-              }}
-            >
-              {!searchParams.color && (
-                <span style={{ 
-                  position: 'absolute', 
-                  left: '10px', 
-                  top: '50%', 
-                  transform: 'translateY(-50%)',
-                  color: '#666'
-                }}>
-                  Click to pick a color
-                </span>
-              )}
-              {searchParams.color && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleColorChange(null);
-                  }}
-                  style={{
-                    position: 'absolute',
-                    right: '5px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    color: '#fff',
-                    cursor: 'pointer',
-                    padding: '5px',
-                  }}
-                >
-                  ×
-                </button>
-              )}
-            </div>
-            {showColorPicker && (
-              <div className="color-picker-dropdown">
-                <input
-                  type="color"
-                  value={searchParams.color || '#ffffff'}
-                  onChange={(e) => handleColorChange(e.target.value)}
-                  style={{
-                    width: '100%',
-                    height: '100px',
-                    padding: '0',
-                    border: 'none',
-                    background: 'none',
-                  }}
-                />
-              </div>
-            )}
+            />
           </div>
 
           <input

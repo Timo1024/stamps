@@ -68,7 +68,6 @@ interface SearchPayload {
   denomination: number | null;
   theme: string | null;
   keywords: string[] | null;
-  colors: string[] | null;
   date_of_issue: string | null;
   category: string | null;
   number_issued: number | null;
@@ -80,6 +79,8 @@ interface SearchPayload {
   sheet_size_vertical: number | null;
   stamp_size_horizontal: number | null;
   stamp_size_vertical: number | null;
+  hue: number | null;
+  saturation: number | null;
 }
 
 function App() {
@@ -117,17 +118,6 @@ function App() {
       <div className="main-container">
         <div className="search-sidebar">
           <SearchBar onSearch={fetchStamps} />
-          <div style={{ padding: '20px' }}>
-            <h3>Color Search</h3>
-            <HuePicker 
-              value={hue} 
-              saturation={saturation}
-              onChange={(newHue, newSaturation) => {
-                setHue(newHue);
-                setSaturation(newSaturation);
-              }} 
-            />
-          </div>
         </div>
 
         <div className="results-container">
