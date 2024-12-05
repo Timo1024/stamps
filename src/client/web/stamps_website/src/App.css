@@ -350,6 +350,13 @@ html, body {
   background-color: #1f2222;
 }
 
+.color-wheel-canvas {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  cursor: pointer;
+}
+
 /* Remove number input spinners */
 .search-sidebar input[type="number"]::-webkit-inner-spin-button,
 .search-sidebar input[type="number"]::-webkit-outer-spin-button {

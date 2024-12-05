@@ -374,9 +374,15 @@ const HuePicker: React.FC<HuePickerProps> = ({
                 ref={canvasRef}
                 width={size}
                 height={size}
+                className="color-wheel-canvas"
+                style={{
+                  width: `${size}px`,
+                  height: `${size}px`
+                }}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
-                style={{ cursor: 'pointer' }}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
               />
             </div>
             <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '5px' }}>
