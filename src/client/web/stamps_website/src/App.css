@@ -53,31 +53,39 @@ html, body {
 }
 
 .stamps-container {
-  color: white;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 20px;
+  padding: 20px;
+  width: 100%;
+}
+
+.stamp-card-wrapper {
+  display: flex;
+  height: 100%;
 }
 
 .stamp-card {
-  /* border: 1px solid #ccc; */
+  background-color: #222626;
   border-radius: 5px;
   padding: 1rem;
-  width: 10rem;
   text-align: center;
-  /* align divs center */
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: #222626;
-  /* add shadow */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transition: box-shadow 0.3s ease-in-out;
+  width: 100%;
 }
 
-/* make shadow larger when hover */
 .stamp-card:hover {
   box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.stamp-card-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .stamp-image-container {
@@ -86,7 +94,6 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* border: 3px solid #000000; */
   box-sizing: border-box;
 }
 
@@ -96,9 +103,57 @@ html, body {
   object-fit: contain;
 }
 
-/* .stamp-info {
+.no-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-style: italic;
+}
+
+.stamp-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  flex-grow: 1;
+  width: 100%;
+}
+
+.stamp-text {
+  flex-grow: 1;
+}
+
+.stamp-country {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #ffffff;
+  margin-top: 1rem;
+}
+
+.stamp-name {
+  font-size: 0.9rem;
+  color: #cccccc;
   margin-top: 0.5rem;
-} */
+}
+
+.color-palette {
+  display: flex;
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 10px;
+}
+
+.color-box {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
 
 .title {
   position: fixed;
@@ -284,7 +339,12 @@ html, body {
 }
 
 .error-message {
-  color: red;
+  color: #ff4444;
+  text-align: center;
+  padding: 10px;
+  margin: 10px 0;
+  background-color: #ffeeee;
+  border-radius: 4px;
 }
 
 .search-results-title {
@@ -465,4 +525,12 @@ input[type="range"]::-moz-range-thumb {
 .tolerance-range::-moz-range-thumb:active {
   background: #ffffff;
   /* border: 2px solid #2c3131; */
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  font-size: 1.2em;
+  color: #666;
+  width: 100%;
 }

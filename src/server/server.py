@@ -110,6 +110,9 @@ def get_themes():
 def search_stamps():
     try:
         search_params = request.json
+        page = search_params.get('page', 0)  # 0-based pagination
+        page_size = search_params.get('page_size', 20)  # Default to 20 items per page
+        
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
 
@@ -335,13 +338,21 @@ def search_stamps():
                     AND are_colors_similar(CONCAT('#', cs.color), {target_hue}, {target_saturation}, {tolerance})
                 )
                 ORDER BY year DESC, stamp_id DESC
+                LIMIT %s OFFSET %s
             """
+            params.extend([page_size, page * page_size])
         else:
-            final_query = f"{base_query} ORDER BY st.year DESC, s.stamp_id DESC"
+            final_query = f"{base_query} ORDER BY st.year DESC, s.stamp_id DESC LIMIT %s OFFSET %s"
+            params.extend([page_size, page * page_size])
 
         # Execute the actual query
         cursor.execute(final_query, params)
         stamps = cursor.fetchall()
+
+        # Get total count for pagination
+        count_query = f"SELECT COUNT(*) as total FROM ({base_query}) as count_table"
+        cursor.execute(count_query, params[:-2])  # Exclude LIMIT and OFFSET params
+        total_count = cursor.fetchone()['total']
 
         # Process the results
         for stamp in stamps:
@@ -352,10 +363,13 @@ def search_stamps():
         cursor.close()
         connection.close()
 
-        # print the amount of rows of the result
-        print(len(stamps))
-
-        return jsonify(stamps)
+        return jsonify({
+            'stamps': stamps,
+            'total_count': total_count,
+            'page': page,
+            'page_size': page_size,
+            'has_more': (page + 1) * page_size < total_count
+        })
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500

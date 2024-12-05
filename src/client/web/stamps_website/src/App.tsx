@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import './App.css';
 
@@ -82,35 +82,76 @@ interface SearchPayload {
   stamp_size_vertical: number | null;
   hue: number | null;
   saturation: number | null;
+  page?: number;
+  page_size?: number;
+}
+
+interface SearchResponse {
+  stamps: Stamp[];
+  total_count: number;
+  page: number;
+  page_size: number;
+  has_more: boolean;
 }
 
 function App() {
   const [stamps, setStamps] = useState<Stamp[]>([]);
   const [error, setError] = useState<string>('');
-  const [imageLinks, setImageLinks] = useState<string[]>([]);
-  const [hue, setHue] = useState(0);
-  const [saturation, setSaturation] = useState(100);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
+  const [currentSearchPayload, setCurrentSearchPayload] = useState<SearchPayload | null>(null);
 
-  const fetchStamps = async (payload: SearchPayload) => {
+  // Intersection Observer setup
+  const observer = useRef<IntersectionObserver>();
+  const lastStampElementRef = useCallback((node: HTMLDivElement | null) => {
+    if (loading) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        setPage(prevPage => prevPage + 1);
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [loading, hasMore]);
+
+  const fetchStamps = async (payload: SearchPayload, isNewSearch: boolean = true) => {
     try {
-      const response = await axios.post(`http://localhost:5000/api/stamps/search`, payload);
-      setStamps(response.data);
+      setLoading(true);
       setError('');
+      
+      const searchPayload = {
+        ...payload,
+        page: isNewSearch ? 0 : page,
+        page_size: 20
+      };
 
-      // Extract and modify image paths
-      const links = response.data.map((stamp: Stamp) => {
-        if (!stamp.image_path) {
-          return "";
-        }
-        return stamp.image_path.replace('./images_all_2/', '');
-      });
-      setImageLinks(links);
+      if (isNewSearch) {
+        setStamps([]);
+        setPage(0);
+        setHasMore(true);
+        setCurrentSearchPayload(searchPayload);
+      }
+
+      const response = await axios.post<SearchResponse>(`http://localhost:5000/api/stamps/search`, searchPayload);
+      
+      setStamps(prev => isNewSearch ? response.data.stamps : [...prev, ...response.data.stamps]);
+      setHasMore(response.data.has_more);
+      setError('');
     } catch (err) {
       setError('Error fetching stamps data.');
       console.error("Error fetching stamps data:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Effect to load more stamps when page changes
+  useEffect(() => {
+    if (page > 0 && currentSearchPayload) {
+      fetchStamps(currentSearchPayload, false);
+    }
+  }, [page]);
 
   return (
     <div className="App">
@@ -118,7 +159,7 @@ function App() {
       
       <div className="main-container">
         <div className="search-sidebar">
-          <SearchBar onSearch={fetchStamps} />
+          <SearchBar onSearch={(payload) => fetchStamps(payload, true)} />
         </div>
 
         <div className="results-container">
@@ -129,17 +170,23 @@ function App() {
             <div className="stamps-container">
               {stamps.length > 0 ? (
                 stamps.map((stamp, index) => (
-                  <StampCard 
-                    key={stamp.stamp_id}
-                    country={stamp.country}
-                    name={stamp.set_name}
-                    imageLink={stamp.image_path ? stamp.image_path.replace('./images_all_2/', '') : null}
-                    colorPalette={stamp.color_palette}
-                  />
+                  <div
+                    ref={index === stamps.length - 1 ? lastStampElementRef : null}
+                    key={`${stamp.stamp_id}-${index}`}
+                    className="stamp-card-wrapper"
+                  >
+                    <StampCard 
+                      country={stamp.country}
+                      name={stamp.set_name}
+                      imageLink={stamp.image_path ? stamp.image_path.replace('./images_all_2/', '') : null}
+                      colorPalette={stamp.color_palette}
+                    />
+                  </div>
                 ))
               ) : (
                 <p>No stamps found matching your search criteria.</p>
               )}
+              {loading && <div className="loading">Loading more stamps...</div>}
             </div>
           </div>
         </div>
