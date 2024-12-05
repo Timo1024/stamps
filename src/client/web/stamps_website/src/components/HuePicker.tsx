@@ -81,10 +81,17 @@ const HuePicker: React.FC<HuePickerProps> = ({
 
   // Initialize color wheel
   useEffect(() => {
-    if (!canvasRef.current || !isOpen) return;
+    if (!canvasRef.current) return;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    if (!isOpen) {
+      // Clear the canvas when closed
+      ctx.clearRect(0, 0, size, size);
+      wheelImageRef.current = null;
+      return;
+    }
 
     // Enable anti-aliasing
     ctx.imageSmoothingEnabled = true;
@@ -96,6 +103,10 @@ const HuePicker: React.FC<HuePickerProps> = ({
     tempCanvas.height = size;
     const tempCtx = tempCanvas.getContext('2d');
     if (!tempCtx) return;
+
+    // Clear both canvases first
+    ctx.clearRect(0, 0, size, size);
+    tempCtx.clearRect(0, 0, size, size);
 
     // Enable anti-aliasing on temp canvas
     tempCtx.imageSmoothingEnabled = true;
