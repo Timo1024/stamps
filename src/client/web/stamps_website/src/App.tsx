@@ -101,7 +101,7 @@ function App() {
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
   const [gridColumns, setGridColumns] = useState(4); // Default value
-  const basePageSize = 20; // Base number of items per page
+  const basePageSize = 40; // Base number of items per page
   const [currentSearchPayload, setCurrentSearchPayload] = useState<SearchPayload | null>(null);
 
   // Calculate the actual page size based on grid columns
