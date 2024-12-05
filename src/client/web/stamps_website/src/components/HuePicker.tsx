@@ -331,51 +331,60 @@ const HuePicker: React.FC<HuePickerProps> = ({
         </div>
       </div>
       
-      <div style={{ 
-          height: isOpen ? '300px' : '0',
-          opacity: isOpen ? 1 : 0,
-          transform: isOpen ? 'translateY(0)' : 'translateY(-20px)',
-          transition: 'all 0.3s ease',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '20px',
-          marginTop: isOpen ? '20px' : '0'
-        }}>
-          <div style={{ 
-            width: size, 
-            height: size, 
-            borderRadius: '50%',
-            overflow: 'hidden',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-            background: '#222626'
+      <div style={{
+        height: isOpen ? '320px' : '0',
+        transition: 'height 0.3s ease',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div style={{ 
+            position: 'absolute',
+            top: '10px',
+            left: 0,
+            right: 0,
+            opacity: isOpen ? 1 : 0,
+            transform: `translateY(${isOpen ? '0' : '-10px'})`,
+            transition: 'opacity 0.3s ease, transform 0.3s ease',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '20px',
+            pointerEvents: isOpen ? 'auto' : 'none'
           }}>
-            <canvas
-              ref={canvasRef}
-              width={size}
-              height={size}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              style={{ cursor: 'pointer' }}
-            />
-          </div>
-          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '5px' }}>
-            <div style={{ display: 'flex', justifyContent: 'flex-start', color: 'white' }}>
-              <span>Tolerance: {Math.round(baseTolerance)}°</span>
+            <div style={{ 
+              width: size, 
+              height: size, 
+              borderRadius: '50%',
+              overflow: 'hidden',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+              background: '#222626'
+            }}>
+              <canvas
+                ref={canvasRef}
+                width={size}
+                height={size}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                style={{ cursor: 'pointer' }}
+              />
             </div>
-            <input
-              type="range"
-              min="5"
-              max="30"
-              step="0.1"
-              value={baseTolerance}
-              onChange={(e) => onToleranceChange(Number(e.target.value))}
-              style={{ width: '100%' }}
-              className="tolerance-range"
-            />
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-start', color: 'white' }}>
+                <span>Tolerance: {Math.round(baseTolerance)}°</span>
+              </div>
+              <input
+                type="range"
+                min="5"
+                max="30"
+                step="0.1"
+                value={baseTolerance}
+                onChange={(e) => onToleranceChange(Number(e.target.value))}
+                style={{ width: '100%' }}
+                className="tolerance-range"
+              />
+            </div>
           </div>
-        </div>
+      </div>
     </div>
   );
 };
