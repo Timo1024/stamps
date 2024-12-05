@@ -14,9 +14,9 @@ const StampCard: React.FC<StampCardProps> = ({ country, name, imageLink, colorPa
   useEffect(() => {
     if (colorPalette) {
       try {
-        // Parse the color palette string into an array
-        const parsedColors = JSON.parse(colorPalette.replace(/'/g, '"'));
-        setColors(parsedColors);
+        // Parse the string representation of the array
+        const colorArray = JSON.parse(colorPalette.replace(/'/g, '"'));
+        setColors(colorArray);
       } catch (error) {
         console.error('Error parsing color palette:', error);
         setColors([]);
@@ -40,18 +40,19 @@ const StampCard: React.FC<StampCardProps> = ({ country, name, imageLink, colorPa
       <div className="stamp-info">
         <div className="stamp-country">{country}</div>
         <div className="stamp-name">{name}</div>
-        {colors.length > 0 && (
-          <div className="color-palette">
-            {colors.map((color, index) => (
-              <div
-                key={index}
-                className="color-box"
-                style={{ backgroundColor: `#${color}` }}
-              />
-            ))}
-          </div>
-        )}
       </div>
+      {colors.length > 0 && (
+        <div className="color-palette">
+          {colors.map((color, index) => (
+            <div
+              key={index}
+              className="color-box"
+              style={{ backgroundColor: color }}
+              title={color}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

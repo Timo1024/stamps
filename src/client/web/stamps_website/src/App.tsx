@@ -169,20 +169,23 @@ function App() {
             <h2 className="search-results-title">Search Results:</h2>
             <div className="stamps-container">
               {stamps.length > 0 ? (
-                stamps.map((stamp, index) => (
-                  <div
-                    ref={index === stamps.length - 1 ? lastStampElementRef : null}
-                    key={`${stamp.stamp_id}-${index}`}
-                    className="stamp-card-wrapper"
-                  >
-                    <StampCard 
-                      country={stamp.country}
-                      name={stamp.set_name}
-                      imageLink={stamp.image_path ? stamp.image_path.replace('./images_all_2/', '') : null}
-                      colorPalette={stamp.color_palette}
-                    />
-                  </div>
-                ))
+                stamps.map((stamp, index) => {
+                  console.log('Stamp color palette:', stamp.color_palette);
+                  return (
+                    <div
+                      ref={index === stamps.length - 1 ? lastStampElementRef : null}
+                      key={`${stamp.stamp_id}-${index}`}
+                      className="stamp-card-wrapper"
+                    >
+                      <StampCard 
+                        country={stamp.country}
+                        name={stamp.set_name}
+                        imageLink={stamp.image_path ? stamp.image_path.replace('./images_all_2/', '') : null}
+                        colorPalette={stamp.color_palette}
+                      />
+                    </div>
+                  );
+                })
               ) : (
                 <p>No stamps found matching your search criteria.</p>
               )}
