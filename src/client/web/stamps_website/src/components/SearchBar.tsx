@@ -67,6 +67,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   const [showThemeDropdown, setShowThemeDropdown] = useState(false);
   const themeContainerRef = useRef<HTMLDivElement>(null);
 
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     // Fetch countries and themes when component mounts
     const fetchData = async () => {
@@ -152,25 +154,36 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     setShowThemeDropdown(false);
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+    setLoading(true);
     onSearch(searchParams);
+    setLoading(false);
   };
 
   const handleToleranceChange = (tolerance: number) => {
-    handleChange('tolerance', tolerance);
+    setSearchParams({
+      ...searchParams,
+      tolerance
+    });
   };
 
   return (
-    <div style={{ padding: '0px', maxWidth: '600px', margin: '0 auto' }}>
-      <form 
-        onSubmit={handleSubmit} 
-        autoComplete="off" 
-        autoCorrect="off"
-        spellCheck="false"
-      >
+    <div className="search-bar">
+      <div className="search-header">
+        <h2>Search Filters</h2>
+        <button 
+          className="search-submit-button"
+          onClick={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? 'Searching...' : 'Search Stamps'}
+        </button>
+      </div>
+
+      <div className="search-section">
+        {/* <h3>Basic Search</h3> */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start'}}>
-          <div style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '10px' }}>Search</div>
           <input
             type="text"
             placeholder="Username"
@@ -404,10 +417,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
               spellCheck="false"
             />
           </div>
-
-          <button type="submit">Search</button>
         </div>
-      </form>
+      </div>
     </div>
   );
 };
