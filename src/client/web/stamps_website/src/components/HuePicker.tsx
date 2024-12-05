@@ -322,9 +322,12 @@ const HuePicker: React.FC<HuePickerProps> = ({
         <div style={{ 
           transform: `rotate(${isOpen ? '180deg' : '0deg'})`,
           transition: 'transform 0.3s ease',
-          fontSize: '20px'
+          display: 'flex',
+          alignItems: 'center'
         }}>
-          ▼
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="10" viewBox="0 0 18 15" fill="none">
+            <path d="M8.16866 13.7564C8.56463 14.3487 9.43537 14.3487 9.83134 13.7564L17.4862 2.30576C17.9304 1.64129 17.4542 0.75 16.6549 0.75H1.34511C0.545834 0.75 0.0695588 1.64129 0.513764 2.30576L8.16866 13.7564Z" fill="white"/>
+          </svg>
         </div>
       </div>
       
@@ -354,8 +357,8 @@ const HuePicker: React.FC<HuePickerProps> = ({
             />
           </div>
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '5px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666' }}>
-              <div
+            <div style={{ display: 'flex', justifyContent: 'flex-start', color: 'white' }}>
+              {/* <div
                 style={{
                   width: '24px',
                   height: '24px',
@@ -363,8 +366,8 @@ const HuePicker: React.FC<HuePickerProps> = ({
                   backgroundColor: `hsl(${value}, ${saturation}%, 50%)`,
                   border: '1px solid #ccc',
                 }}
-              />
-              <span>Tolerance: {Math.round(baseTolerance)}° (Max: {Math.round(baseTolerance * 3)}°)</span>
+              /> */}
+              <span>Tolerance: {Math.round(baseTolerance)}°</span>
             </div>
             <input
               type="range"
