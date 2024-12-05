@@ -56,7 +56,7 @@ html, body {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 1rem;
-  padding: 1rem;
+  /* padding: 1rem; */
   width: 100%;
   box-sizing: border-box;
   align-items: start;
@@ -82,6 +82,7 @@ html, body {
   width: 100%;
   position: relative;
   min-height: 250px;
+  max-width: 200px;
 }
 
 .stamp-card:hover {
@@ -342,7 +343,7 @@ html, body {
   margin-left: max(350px, min(30vw, 500px));
   padding-left: 2rem;
   padding-right: 3rem;
-  padding-top: 1rem;
+  padding-top: 2rem;
   overflow-y: auto;
   box-sizing: border-box;
   width: calc(100% - max(350px, min(30vw, 500px)));
