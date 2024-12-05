@@ -52,9 +52,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     sheet_size_vertical: null,
     stamp_size_horizontal: null,
     stamp_size_vertical: null,
-    hue: 0,
-    saturation: 100,
-    tolerance: 10
+    hue: 180,
+    saturation: 60,
+    tolerance: 15
   });
 
   const [countries, setCountries] = useState<string[]>([]);
