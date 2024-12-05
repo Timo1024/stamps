@@ -277,14 +277,25 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             spellCheck="false"
           />
 
-          <input
-            type="text"
+          <textarea
             placeholder="Keywords (comma-separated)"
             value={searchParams.keywords?.join(', ') || ''}
-            onChange={(e) => handleChange('keywords', e.target.value ? e.target.value.split(',').map(k => k.trim()) : null)}
+            onChange={(e) => {
+              const value = e.target.value;
+              handleChange('keywords', value ? value.split(',').map(k => k.trim()) : null);
+              // Auto-adjust height only if content exceeds initial height
+              if (e.target.scrollHeight > 57) {
+                e.target.style.height = 'auto';
+                e.target.style.height = `${e.target.scrollHeight + 2}px`;
+              } else {
+                e.target.style.height = '57px';
+              }
+            }}
             autoComplete="new-password"
             autoCorrect="off"
             spellCheck="false"
+            rows={1}
+            className="keywords-textarea"
           />
 
           <div style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '10px' }}>Advanced Search Options</div>
