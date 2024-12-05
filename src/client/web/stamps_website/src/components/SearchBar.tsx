@@ -52,8 +52,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     sheet_size_vertical: null,
     stamp_size_horizontal: null,
     stamp_size_vertical: null,
-    hue: 180,
-    saturation: 60,
+    hue: null,
+    saturation: null,
     tolerance: 15
   });
 

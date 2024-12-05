@@ -36,8 +36,32 @@ const HuePicker: React.FC<HuePickerProps> = ({
   }, []);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    // Calculate relative position from center
+    const dx = x - radius;
+    const dy = y - radius;
+
+    // Calculate distance from center (for saturation)
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    // Don't allow selection in the dead zone
+    if (distance <= deadZoneRadius || distance > radius) {
+      return;
+    }
+
+    const newSaturation = Math.min(distance / radius * 100, 100);
+
+    // Calculate angle (for hue)
+    let hue = Math.atan2(dy, dx) * (180 / Math.PI) + 180;
+
+    onChange(hue, newSaturation);
     setIsDragging(true);
-    handleMouseMove(e);
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
