@@ -23,18 +23,36 @@ const HuePicker: React.FC<HuePickerProps> = ({
   const radius = size / 2;
   const deadZoneRadius = radius * 0.15; // 15% of the radius will be the "dead zone"
 
-  // Function to get color from position
-  const getColorFromPosition = (clientX: number, clientY: number) => {
+  useEffect(() => {
+    // Global mouse up handler to ensure we stop dragging even if mouse is released outside
+    const handleGlobalMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    return () => {
+      window.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, []);
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    setIsDragging(true);
+    handleMouseMove(e);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDragging) return;
+    
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
-    const centerX = rect.left + radius;
-    const centerY = rect.top + radius;
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
     // Calculate relative position from center
-    const dx = clientX - centerX;
-    const dy = clientY - centerY;
+    const dx = x - radius;
+    const dy = y - radius;
 
     // Calculate distance from center (for saturation)
     const distance = Math.sqrt(dx * dx + dy * dy);
@@ -53,31 +71,6 @@ const HuePicker: React.FC<HuePickerProps> = ({
       onChange(hue, newSaturation);
     }
   };
-
-  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    setIsDragging(true);
-    getColorFromPosition(e.clientX, e.clientY);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (isDragging) {
-      requestAnimationFrame(() => {
-        getColorFromPosition(e.clientX, e.clientY);
-      });
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  // Add mouse up listener to window to handle dragging outside canvas
-  useEffect(() => {
-    window.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, []);
 
   // Initialize color wheel
   useEffect(() => {
@@ -313,7 +306,7 @@ const HuePicker: React.FC<HuePickerProps> = ({
   }, [value, saturation, baseTolerance, isOpen]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', position: 'relative' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => setIsOpen(!isOpen)}>
         <div
           style={{
@@ -381,8 +374,7 @@ const HuePicker: React.FC<HuePickerProps> = ({
                 }}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
+                onMouseUp={() => setIsDragging(false)}
               />
             </div>
             <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '5px' }}>
