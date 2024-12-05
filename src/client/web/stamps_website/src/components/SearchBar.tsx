@@ -69,6 +69,14 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
 
   const [loading, setLoading] = useState(false);
 
+  const [keywordsText, setKeywordsText] = useState('');
+
+  useEffect(() => {
+    if (searchParams.keywords?.length) {
+      setKeywordsText(searchParams.keywords.join(', '));
+    }
+  }, []);
+
   useEffect(() => {
     // Fetch countries and themes when component mounts
     const fetchData = async () => {
@@ -168,6 +176,13 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     });
   };
 
+  const handleKeywordsChange = (value: string) => {
+    setKeywordsText(value);
+    // Only split into keywords when submitting or when there's actual content
+    const keywords = value.trim() ? value.split(',').map(k => k.trim()).filter(k => k) : null;
+    handleChange('keywords', keywords);
+  };
+
   return (
     <div className="search-bar">
       <div className="search-header">
@@ -182,7 +197,6 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
       </div>
 
       <div className="search-section">
-        {/* <h3>Basic Search</h3> */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start'}}>
           <input
             type="text"
@@ -279,10 +293,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
 
           <textarea
             placeholder="Keywords (comma-separated)"
-            value={searchParams.keywords?.join(', ') || ''}
+            value={keywordsText}
             onChange={(e) => {
               const value = e.target.value;
-              handleChange('keywords', value ? value.split(',').map(k => k.trim()) : null);
+              handleKeywordsChange(value);
               // Auto-adjust height only if content exceeds initial height
               if (e.target.scrollHeight > 57) {
                 e.target.style.height = 'auto';
