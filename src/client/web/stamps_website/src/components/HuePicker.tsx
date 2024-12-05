@@ -302,7 +302,7 @@ const HuePicker: React.FC<HuePickerProps> = ({
   }, [value, saturation, baseTolerance, isOpen]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', position: 'relative' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => setIsOpen(!isOpen)}>
         <div
           style={{
@@ -316,8 +316,8 @@ const HuePicker: React.FC<HuePickerProps> = ({
             display: 'flex',
             paddingLeft: '10px',
           }}
-              >
-            <div style={{ color: '#181b1b' }}>Color</div>
+        >
+          <div style={{ color: '#181b1b' }}>Color</div>
         </div>
         <div style={{ 
           transform: `rotate(${isOpen ? '180deg' : '0deg'})`,
@@ -331,13 +331,17 @@ const HuePicker: React.FC<HuePickerProps> = ({
         </div>
       </div>
       
-      {isOpen && (
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'center', 
-          gap: '20px',
+      <div style={{ 
+          height: isOpen ? '300px' : '0',
+          opacity: isOpen ? 1 : 0,
+          transform: isOpen ? 'translateY(0)' : 'translateY(-20px)',
           transition: 'all 0.3s ease',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '20px',
+          marginTop: isOpen ? '20px' : '0'
         }}>
           <div style={{ 
             width: size, 
@@ -358,28 +362,20 @@ const HuePicker: React.FC<HuePickerProps> = ({
           </div>
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '5px' }}>
             <div style={{ display: 'flex', justifyContent: 'flex-start', color: 'white' }}>
-              {/* <div
-                style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '4px',
-                  backgroundColor: `hsl(${value}, ${saturation}%, 50%)`,
-                  border: '1px solid #ccc',
-                }}
-              /> */}
               <span>Tolerance: {Math.round(baseTolerance)}°</span>
             </div>
             <input
               type="range"
               min="5"
               max="30"
+              step="0.1"
               value={baseTolerance}
               onChange={(e) => onToleranceChange(Number(e.target.value))}
               style={{ width: '100%' }}
+              className="tolerance-range"
             />
           </div>
         </div>
-      )}
     </div>
   );
 };

@@ -222,7 +222,7 @@ html, body {
   color: white
 }
 
-.search-sidebar input:focus {
+.search-sidebar input:not([type="range"]):focus {
   outline: none;
   background-color: #1f2222;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -362,7 +362,7 @@ html, body {
   appearance: textfield; /* Standard syntax */
 }
 
-input[type="range"] {
+/* input[type="range"] {
   -webkit-appearance: none;
   width: 100%;
   height: 20px;
@@ -390,4 +390,72 @@ input[type="range"]::-moz-range-thumb {
   border: 2px solid #2c3131;
   cursor: pointer;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+} */
+
+/* Tolerance range input specific styles */
+.tolerance-range {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 10px;
+  background: none !important;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  padding: 0 !important;
+  padding-top: 10px !important;
+}
+
+.tolerance-range::-webkit-slider-runnable-track {
+  height: 10px;
+  border-radius: 10px;
+  background: #181b1b;
+}
+
+.tolerance-range::-moz-range-track {
+  height: 10px;
+  border-radius: 10px;
+  background: #181b1b;
+}
+
+.tolerance-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  /* border: 2px solid #2c3131; */
+  cursor: pointer;
+  margin-top: -5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.tolerance-range::-moz-range-thumb {
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  /* border: 2px solid #2c3131; */
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Prevent any state changes */
+/* .tolerance-range:hover,
+.tolerance-range:focus,
+.tolerance-range:active {
+  outline: none;
+  background: #2c3131;
+} */
+
+.tolerance-range::-webkit-slider-thumb:hover,
+.tolerance-range::-webkit-slider-thumb:active {
+  background: #ffffff;
+  /* border: 2px solid #2c3131; */
+}
+
+.tolerance-range::-moz-range-thumb:hover,
+.tolerance-range::-moz-range-thumb:active {
+  background: #ffffff;
+  /* border: 2px solid #2c3131; */
 }
