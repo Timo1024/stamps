@@ -7,53 +7,54 @@ import SearchBar from './components/SearchBar';
 import HuePicker from './components/HuePicker';
 
 interface Stamp {
-  added_at: string;
+  // added_at: string;
   amount_letter_fdc: number | null;
-  amount_minted: number | null;
   amount_unused: number | null;
   amount_used: number;
+  // amount_minted: number | null;
   category: string;
-  color: string;
+  // color: string;
   color_palette: string;
   country: string;
   date_of_issue: string;
   denomination: string;
   description: string;
-  designed: string;
-  engraved: string;
+  // designed: string;
+  // engraved: string;
   height: number | null;
   height_width: string | null;
-  image_accuracy: number;
+  // image_accuracy: number;
   image_path: string;
   letter_fdc: number | null;
   letter_fdc_float: number | null;
   mint_condition: string;
   mint_condition_float: number;
-  name: string;
-  note: string | null;
+  // name: string;
+  // note: string | null;
   number: string;
   number_issued: number;
   perforation_horizontal: number;
   perforation_keyword: string;
   perforation_vertical: number;
   perforations: string;
-  set_description: string;
-  set_id: number;
+  // set_description: string;
+  set_name: string;
+  // set_id: number;
   sheet_size: string;
   sheet_size_amount: number | null;
-  sheet_size_note: string | null;
+  // sheet_size_note: string | null;
   sheet_size_x: number | null;
   sheet_size_y: number | null;
   stamp_id: number;
-  stamps_issued: string;
-  themes: string;
+  // stamps_issued: string;
+  // themes: string;
   type: string;
   unused: number | null;
   unused_float: number | null;
-  url: string;
+  // url: string;
   used: string;
   used_float: number;
-  user_id: number;
+  // user_id: number;
   value_from: number;
   value_to: number;
   width: number | null;
@@ -131,7 +132,7 @@ function App() {
                   <StampCard 
                     key={stamp.stamp_id}
                     country={stamp.country}
-                    name={stamp.name}
+                    name={stamp.set_name}
                     imageLink={stamp.image_path ? stamp.image_path.replace('./images_all_2/', '') : null}
                     colorPalette={stamp.color_palette}
                   />

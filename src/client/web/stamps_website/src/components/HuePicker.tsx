@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 interface HuePickerProps {
-  value: number;
-  saturation: number;
-  onChange: (hue: number, saturation: number) => void;
+  value: number | null;
+  saturation: number | null;
+  onChange: (hue: number | null, saturation: number | null) => void;
   baseTolerance: number;
   onToleranceChange: (tolerance: number) => void;
 }
@@ -177,20 +177,22 @@ const HuePicker: React.FC<HuePickerProps> = ({
     ctx.putImageData(wheelImageRef.current, 0, 0);
 
     // Draw selected color indicator at exact position
-    const angle = (value - 180) * (Math.PI / 180);
-    const indicatorDistance = (saturation / 100) * radius;
-    const indicatorX = radius + Math.cos(angle) * indicatorDistance;
-    const indicatorY = radius + Math.sin(angle) * indicatorDistance;
+    if (value !== null && saturation !== null) {
+      const angle = (value - 180) * (Math.PI / 180);
+      const indicatorDistance = (saturation / 100) * radius;
+      const indicatorX = radius + Math.cos(angle) * indicatorDistance;
+      const indicatorY = radius + Math.sin(angle) * indicatorDistance;
 
-    // Only draw indicator if outside dead zone
-    if (indicatorDistance > deadZoneRadius) {
-      ctx.beginPath();
-      ctx.arc(indicatorX, indicatorY, 5, 0, Math.PI * 2);
-      ctx.strokeStyle = 'white';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.fillStyle = `hsl(${value}, ${saturation}%, 50%)`;
-      ctx.fill();
+      // Only draw indicator if outside dead zone
+      if (indicatorDistance > deadZoneRadius) {
+        ctx.beginPath();
+        ctx.arc(indicatorX, indicatorY, 5, 0, Math.PI * 2);
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = `hsl(${value}, ${saturation}%, 50%)`;
+        ctx.fill();
+      }
     }
   }, [value, saturation, isOpen]);
 
@@ -205,20 +207,22 @@ const HuePicker: React.FC<HuePickerProps> = ({
     ctx.putImageData(wheelImageRef.current, 0, 0);
 
     // Draw selected color indicator at exact position
-    const angle = (value - 180) * (Math.PI / 180);
-    const indicatorDistance = (saturation / 100) * radius;
-    const indicatorX = radius + Math.cos(angle) * indicatorDistance;
-    const indicatorY = radius + Math.sin(angle) * indicatorDistance;
+    if (value !== null && saturation !== null) {
+      const angle = (value - 180) * (Math.PI / 180);
+      const indicatorDistance = (saturation / 100) * radius;
+      const indicatorX = radius + Math.cos(angle) * indicatorDistance;
+      const indicatorY = radius + Math.sin(angle) * indicatorDistance;
 
-    // Only draw indicator if outside dead zone
-    if (indicatorDistance > deadZoneRadius) {
-      ctx.beginPath();
-      ctx.arc(indicatorX, indicatorY, 5, 0, Math.PI * 2);
-      ctx.strokeStyle = 'white';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.fillStyle = `hsl(${value}, ${saturation}%, 50%)`;
-      ctx.fill();
+      // Only draw indicator if outside dead zone
+      if (indicatorDistance > deadZoneRadius) {
+        ctx.beginPath();
+        ctx.arc(indicatorX, indicatorY, 5, 0, Math.PI * 2);
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = `hsl(${value}, ${saturation}%, 50%)`;
+        ctx.fill();
+      }
     }
 
     // Calculate delta based on current HSL color
@@ -243,66 +247,68 @@ const HuePicker: React.FC<HuePickerProps> = ({
     };
 
     // Draw tolerance overlay
-    const delta = calculateDelta(value, saturation);
-    const adjustedTolerance = baseTolerance * (1 + (1 - delta) * 2);
+    if (value !== null && saturation !== null) {
+      const delta = calculateDelta(value, saturation);
+      const adjustedTolerance = baseTolerance * (1 + (1 - delta) * 2);
 
-    // Create temporary canvas for anti-aliasing
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = size;
-    tempCanvas.height = size;
-    const tempCtx = tempCanvas.getContext('2d');
-    if (!tempCtx) return;
+      // Create temporary canvas for anti-aliasing
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = size;
+      tempCanvas.height = size;
+      const tempCtx = tempCanvas.getContext('2d');
+      if (!tempCtx) return;
 
-    tempCtx.imageSmoothingEnabled = true;
-    tempCtx.imageSmoothingQuality = 'high';
+      tempCtx.imageSmoothingEnabled = true;
+      tempCtx.imageSmoothingQuality = 'high';
 
-    const startAngle = ((value - adjustedTolerance - 180) * Math.PI) / 180;
-    const endAngle = ((value + adjustedTolerance - 180) * Math.PI) / 180;
+      const startAngle = ((value - adjustedTolerance - 180) * Math.PI) / 180;
+      const endAngle = ((value + adjustedTolerance - 180) * Math.PI) / 180;
+      
+      // Calculate radii
+      const innerRadius = Math.max(deadZoneRadius, (Math.max(0, saturation - adjustedTolerance) / 100) * radius);
+      const outerRadius = Math.min(radius, ((saturation + adjustedTolerance) / 100) * radius);
+
+      // Draw the border lines
+      tempCtx.beginPath();
+      
+      // Draw outer arc
+      tempCtx.arc(radius, radius, outerRadius, startAngle, endAngle);
+      // Line to inner arc
+      tempCtx.lineTo(
+        radius + Math.cos(endAngle) * innerRadius,
+        radius + Math.sin(endAngle) * innerRadius
+      );
+      // Draw inner arc
+      tempCtx.arc(radius, radius, innerRadius, endAngle, startAngle, true);
+      // Close the path
+      tempCtx.lineTo(
+        radius + Math.cos(startAngle) * outerRadius,
+        radius + Math.sin(startAngle) * outerRadius
+      );
+
+      // Set border style
+      tempCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; 
+      tempCtx.lineWidth = 2; 
     
-    // Calculate radii
-    const innerRadius = Math.max(deadZoneRadius, (Math.max(0, saturation - adjustedTolerance) / 100) * radius);
-    const outerRadius = Math.min(radius, ((saturation + adjustedTolerance) / 100) * radius);
-
-    // Draw the border lines
-    tempCtx.beginPath();
+      // Add slight anti-aliasing
+      tempCtx.shadowColor = 'rgba(0, 0, 0, 0.3)'; 
+      tempCtx.shadowBlur = 0.5;
     
-    // Draw outer arc
-    tempCtx.arc(radius, radius, outerRadius, startAngle, endAngle);
-    // Line to inner arc
-    tempCtx.lineTo(
-      radius + Math.cos(endAngle) * innerRadius,
-      radius + Math.sin(endAngle) * innerRadius
-    );
-    // Draw inner arc
-    tempCtx.arc(radius, radius, innerRadius, endAngle, startAngle, true);
-    // Close the path
-    tempCtx.lineTo(
-      radius + Math.cos(startAngle) * outerRadius,
-      radius + Math.sin(startAngle) * outerRadius
-    );
-
-    // Set border style
-    tempCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; 
-    tempCtx.lineWidth = 2; 
+      // Draw the stroke
+      tempCtx.stroke();
     
-    // Add slight anti-aliasing
-    tempCtx.shadowColor = 'rgba(0, 0, 0, 0.3)'; 
-    tempCtx.shadowBlur = 0.5;
-    
-    // Draw the stroke
-    tempCtx.stroke();
-    
-    // Reset shadow
-    tempCtx.shadowBlur = 0;
+      // Reset shadow
+      tempCtx.shadowBlur = 0;
 
-    // Draw to main canvas
-    ctx.drawImage(tempCanvas, 0, 0);
+      // Draw to main canvas
+      ctx.drawImage(tempCanvas, 0, 0);
 
-    // Add tolerance info text
-    // ctx.fillStyle = '#666';
-    // ctx.font = '12px Arial';
-    // ctx.textAlign = 'center';
-    // ctx.fillText(`Tolerance: ±${Math.round(adjustedTolerance)}°`, radius, size - 10);
+      // Add tolerance info text
+      // ctx.fillStyle = '#666';
+      // ctx.font = '12px Arial';
+      // ctx.textAlign = 'center';
+      // ctx.fillText(`Tolerance: ±${Math.round(adjustedTolerance)}°`, radius, size - 10);
+    }
   }, [value, saturation, baseTolerance, isOpen]);
 
   return (
@@ -310,19 +316,35 @@ const HuePicker: React.FC<HuePickerProps> = ({
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => setIsOpen(!isOpen)}>
         <div
           style={{
+            position: 'relative',
             width: '100%',
             height: '2rem',
             borderRadius: '4px',
-            backgroundColor: `hsl(${value}, ${saturation}%, 50%)`,
-            border: `1px solid hsl(${value}, ${saturation}%, 50%)`,
-            justifyContent: 'flex-start',
+            backgroundColor: value !== null ? `hsl(${value}, ${saturation}%, 50%)` : 'transparent',
+            border: value !== null ? `1px solid hsl(${value}, ${saturation}%, 50%)` : '1px solid #ccc',
+            justifyContent: 'space-between',
             alignItems: 'center',
             display: 'flex',
             paddingLeft: '10px',
+            paddingRight: '10px'
           }}
         >
-          <div style={{ color: '#181b1b' }}>Color</div>
+          <div style={{ color: value !== null ? '#181b1b' : 'white' }}>Color</div>
+          {value !== null && (
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange(null, null);
+              }}
+              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M4.64645 4.64645C4.84171 4.45118 5.15829 4.45118 5.35355 4.64645L8 7.29289L10.6464 4.64645C10.8417 4.45118 11.1583 4.45118 11.3536 4.64645C11.5488 4.84171 11.5488 5.15829 11.3536 5.35355L8.70711 8L11.3536 10.6464C11.5488 10.8417 11.5488 11.1583 11.3536 11.3536C11.1583 11.5488 10.8417 11.5488 10.6464 11.3536L8 8.70711L5.35355 11.3536C5.15829 11.5488 4.84171 11.5488 4.64645 11.3536C4.45118 11.1583 4.45118 10.8417 4.64645 10.6464L7.29289 8L4.64645 5.35355C4.45118 5.15829 4.45118 4.84171 4.64645 4.64645Z" fill="#181b1b"/>
+              </svg>
+            </div>
+          )}
         </div>
+        
         <div style={{ 
           transform: `rotate(${isOpen ? '180deg' : '0deg'})`,
           transition: 'transform 0.3s ease',

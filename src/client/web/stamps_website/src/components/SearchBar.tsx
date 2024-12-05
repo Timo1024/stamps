@@ -279,14 +279,14 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
           <div style={{ marginBottom: '0.5rem', width: '100%' }}>
             {/* <div style={{ marginBottom: '10px', fontWeight: 'bold' }}>Color:</div> */}
             <HuePicker
-              value={searchParams.hue || 0}
-              saturation={searchParams.saturation || 100}
+              value={searchParams.hue}
+              saturation={searchParams.saturation}
               onChange={(hue, saturation) => {
-                setSearchParams(prev => ({
-                  ...prev,
+                setSearchParams({
+                  ...searchParams,
                   hue,
-                  saturation,
-                }));
+                  saturation
+                });
               }}
               baseTolerance={searchParams.tolerance || 10}
               onToleranceChange={handleToleranceChange}
