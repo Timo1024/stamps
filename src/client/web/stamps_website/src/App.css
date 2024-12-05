@@ -54,16 +54,19 @@ html, body {
 
 .stamps-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  padding: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
   width: 100%;
   box-sizing: border-box;
+  align-items: start;
 }
 
 .stamp-card-wrapper {
-  display: flex;
+  width: 100%;
   height: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .stamp-card {

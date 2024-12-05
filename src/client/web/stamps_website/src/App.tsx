@@ -96,11 +96,48 @@ interface SearchResponse {
 
 function App() {
   const [stamps, setStamps] = useState<Stamp[]>([]);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
+  const [gridColumns, setGridColumns] = useState(4); // Default value
+  const basePageSize = 20; // Base number of items per page
   const [currentSearchPayload, setCurrentSearchPayload] = useState<SearchPayload | null>(null);
+
+  // Calculate the actual page size based on grid columns
+  const getAdjustedPageSize = useCallback(() => {
+    return Math.ceil(basePageSize / gridColumns) * gridColumns;
+  }, [gridColumns]);
+
+  // Update grid columns based on container width
+  const updateGridColumns = useCallback(() => {
+    const container = document.querySelector('.stamps-container');
+    if (container) {
+      const computedStyle = window.getComputedStyle(container);
+      const gridTemplateColumns = computedStyle.getPropertyValue('grid-template-columns');
+      const columnCount = gridTemplateColumns.split(' ').length;
+      if (columnCount !== gridColumns) {
+        setGridColumns(columnCount);
+      }
+    }
+  }, [gridColumns]);
+
+  // Add resize observer to update grid columns
+  useEffect(() => {
+    const container = document.querySelector('.stamps-container');
+    if (container) {
+      const resizeObserver = new ResizeObserver(() => {
+        updateGridColumns();
+      });
+      resizeObserver.observe(container);
+      return () => resizeObserver.disconnect();
+    }
+  }, [updateGridColumns]);
+
+  // Initial grid columns calculation
+  useEffect(() => {
+    updateGridColumns();
+  }, [updateGridColumns]);
 
   // Intersection Observer setup
   const observer = useRef<IntersectionObserver>();
@@ -115,7 +152,7 @@ function App() {
     if (node) observer.current.observe(node);
   }, [loading, hasMore]);
 
-  const fetchStamps = async (payload: SearchPayload, isNewSearch: boolean = true) => {
+  const fetchStamps = useCallback(async (payload: SearchPayload, isNewSearch: boolean = true) => {
     try {
       setLoading(true);
       setError('');
@@ -123,7 +160,7 @@ function App() {
       const searchPayload = {
         ...payload,
         page: isNewSearch ? 0 : page,
-        page_size: 20
+        page_size: getAdjustedPageSize()
       };
 
       if (isNewSearch) {
@@ -144,7 +181,7 @@ function App() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, getAdjustedPageSize]);
 
   // Effect to load more stamps when page changes
   useEffect(() => {
