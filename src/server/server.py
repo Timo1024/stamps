@@ -217,9 +217,7 @@ def search_stamps():
             INNER JOIN stamps s ON s.set_id = st.set_id
             LEFT JOIN user_stamps u ON s.stamp_id = u.stamp_id
             WHERE {' AND '.join(conditions)}
-            AND st.country LIKE %s
         """
-        params.append('%DDR%')  # Add the country filter parameter
 
         # If color filtering is needed, wrap the base query in a subquery
         if search_params.get('hue') is not None and search_params.get('saturation') is not None:

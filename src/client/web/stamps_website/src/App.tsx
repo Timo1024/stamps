@@ -104,6 +104,7 @@ function App() {
   const [gridColumns, setGridColumns] = useState(4); // Default value
   const basePageSize = 40; // Base number of items per page
   const [currentSearchPayload, setCurrentSearchPayload] = useState<SearchPayload | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Calculate the actual page size based on grid columns
   const getAdjustedPageSize = useCallback(() => {
@@ -171,6 +172,7 @@ function App() {
       });
       
       setStamps(prev => isNewSearch ? response.data.stamps : [...prev, ...response.data.stamps]);
+      setTotalCount(response.data.total_count);
       setHasMore(response.data.has_more);
       setError(null);
     } catch (err) {
@@ -202,7 +204,7 @@ function App() {
           {error && <p className="error-message">{error}</p>}
 
           <div>
-            <div className="search-results-title">Search Results:</div>
+            <div className="search-results-title">Search Results {totalCount > 0 ? `(${totalCount} stamps found)` : ''}</div>
             <div className="stamps-container">
               {loading && !stamps.length ? (
                 <div style={{ width: '100%', textAlign: 'left' }}>
