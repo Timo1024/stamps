@@ -24,6 +24,7 @@ interface SearchPayload {
   hue: number | null;
   saturation: number | null;
   tolerance: number | null;
+  max_results: number | null;
 }
 
 interface SearchBarProps {
@@ -54,7 +55,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     stamp_size_vertical: null,
     hue: null,
     saturation: null,
-    tolerance: 15
+    tolerance: 15,
+    max_results: 1000
   });
 
   const [countries, setCountries] = useState<string[]>([]);
@@ -181,6 +183,11 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     // Only split into keywords when submitting or when there's actual content
     const keywords = value.trim() ? value.split(',').map(k => k.trim()).filter(k => k) : null;
     handleChange('keywords', keywords);
+  };
+
+  const handleMaxResultsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    handleChange('max_results', value ? Number(value) : null);
   };
 
   return (
@@ -442,6 +449,15 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
               spellCheck="false"
             />
           </div>
+
+          <input
+            type="number"
+            placeholder="Max Results"
+            value={searchParams.max_results || ''}
+            onChange={handleMaxResultsChange}
+            min="1"
+            className="max-results-input"
+          />
         </div>
       </div>
     </div>

@@ -86,110 +86,93 @@ interface SearchPayload {
   page_size?: number;
 }
 
+interface EstimateResponse {
+  estimated_count: number;
+  error?: string;
+  detail?: string;
+}
+
 interface SearchResponse {
   stamps: Stamp[];
   total_count: number;
-  page: number;
-  page_size: number;
-  has_more: boolean;
+  error?: string;
+  detail?: string;
 }
 
+const PAGE_SIZE = 20;
+
 function App() {
-  const [stamps, setStamps] = useState<Stamp[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useState({});
+  const [allStamps, setAllStamps] = useState<Stamp[]>([]);  // All stamps from server
+  const [visibleStamps, setVisibleStamps] = useState<Stamp[]>([]); // Currently visible stamps
   const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [page, setPage] = useState(1);
-  const [hasSearched, setHasSearched] = useState(false);
-  const [gridColumns, setGridColumns] = useState(4); // Default value
-  const basePageSize = 40; // Base number of items per page
-  const [currentSearchPayload, setCurrentSearchPayload] = useState<SearchPayload | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(0);
 
-  // Calculate the actual page size based on grid columns
-  const getAdjustedPageSize = useCallback(() => {
-    return Math.ceil(basePageSize / gridColumns) * gridColumns;
-  }, [gridColumns]);
-
-  // Update grid columns based on container width
-  const updateGridColumns = useCallback(() => {
-    const container = document.querySelector('.stamps-container');
-    if (container) {
-      const computedStyle = window.getComputedStyle(container);
-      const gridTemplateColumns = computedStyle.getPropertyValue('grid-template-columns');
-      const columnCount = gridTemplateColumns.split(' ').length;
-      if (columnCount !== gridColumns) {
-        setGridColumns(columnCount);
-      }
-    }
-  }, [gridColumns]);
-
-  // Add resize observer to update grid columns
-  useEffect(() => {
-    const container = document.querySelector('.stamps-container');
-    if (container) {
-      const resizeObserver = new ResizeObserver(() => {
-        updateGridColumns();
-      });
-      resizeObserver.observe(container);
-      return () => resizeObserver.disconnect();
-    }
-  }, [updateGridColumns]);
-
-  // Initial grid columns calculation
-  useEffect(() => {
-    updateGridColumns();
-  }, [updateGridColumns]);
-
-  // Intersection Observer setup
+  // Intersection Observer for infinite scroll
   const observer = useRef<IntersectionObserver>();
-  const lastStampElementRef = useCallback((node: HTMLDivElement | null) => {
+  const lastStampElementRef = useCallback((node: HTMLDivElement) => {
     if (loading) return;
     if (observer.current) observer.current.disconnect();
+    
     observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
+      if (entries[0].isIntersecting && visibleStamps.length < allStamps.length) {
         setPage(prevPage => prevPage + 1);
       }
     });
+    
     if (node) observer.current.observe(node);
-  }, [loading, hasMore]);
+  }, [loading, visibleStamps.length, allStamps.length]);
 
-  const fetchStamps = useCallback(async (searchPayload: SearchPayload, isNewSearch: boolean = false) => {
+  // Load more stamps when page changes
+  useEffect(() => {
+    const start = page * PAGE_SIZE;
+    const end = start + PAGE_SIZE;
+    setVisibleStamps(prevStamps => {
+      const newStamps = [...prevStamps, ...allStamps.slice(start, end)];
+      return newStamps;
+    });
+  }, [page, allStamps]);
+
+  const handleSearch = useCallback(async (searchParams: any) => {
+    setLoading(true);
+    setError(null);
+    setPage(0);
+    setVisibleStamps([]);
+    
     try {
-      setLoading(true);
-      setHasSearched(true);
+      // Get all results at once
+      const response = await axios.post<SearchResponse>('http://localhost:5000/api/stamps/search', searchParams);
       
-      if (isNewSearch) {
-        setStamps([]); // Clear stamps immediately
-        setPage(1);
-        setCurrentSearchPayload(searchPayload);
+      if (response.data.error) {
+        throw new Error(response.data.detail || response.data.error);
       }
 
-      const response = await axios.post<SearchResponse>(`http://localhost:5000/api/stamps/search`, {
-        ...searchPayload,
-        page: isNewSearch ? 1 : page,
-        page_size: getAdjustedPageSize()
-      });
+      const stamps = Array.isArray(response.data.stamps) ? response.data.stamps : [];
+      console.log('Total stamps loaded:', stamps.length);
+
+      const maxResults = searchParams.max_results || 1000;
+      if (stamps.length > maxResults) {
+        setError(`Too many results (${stamps.length}). Please use more specific search filters or increase the maximum results limit (currently set to ${maxResults}).`);
+        setAllStamps([]);
+        setVisibleStamps([]);
+        return;
+      }
       
-      setStamps(prev => isNewSearch ? response.data.stamps : [...prev, ...response.data.stamps]);
-      setTotalCount(response.data.total_count);
-      setHasMore(response.data.has_more);
+      setAllStamps(stamps);
+      setTotalCount(stamps.length);
+      setVisibleStamps(stamps.slice(0, PAGE_SIZE));
       setError(null);
     } catch (err) {
-      setError('Error fetching stamps data.');
-      setStamps([]);
-      setHasMore(false);
+      console.error('Error:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred while searching');
+      setAllStamps([]);
+      setVisibleStamps([]);
     } finally {
       setLoading(false);
     }
-  }, [page, getAdjustedPageSize]);
-
-  // Effect to load more stamps when page changes
-  useEffect(() => {
-    if (page > 1 && currentSearchPayload) {
-      fetchStamps(currentSearchPayload, false);
-    }
-  }, [page]);
+  }, []);
 
   return (
     <div className="App">
@@ -197,62 +180,64 @@ function App() {
       
       <div className="main-container">
         <div className="search-sidebar">
-          <SearchBar onSearch={(payload) => fetchStamps(payload, true)} />
+          <SearchBar onSearch={handleSearch} />
         </div>
 
         <div className="results-container">
-          {error && <p className="error-message">{error}</p>}
-
-          <div>
-            <div className="search-results-title">Search Results {totalCount > 0 ? `(${totalCount} stamps found)` : ''}</div>
-            <div className="stamps-container">
-              {loading && !stamps.length ? (
-                <div style={{ width: '100%', textAlign: 'left' }}>
-                  <div style={{ fontWeight: 300, fontSize: '1rem' }}>Searching for stamps...</div>
-                </div>
-              ) : !loading && !stamps.length ? (
-                  <div style={{
-                    width: '100%',
-                    // textAlign: 'center',
-                    // make text align left
-                    textAlign: 'left',
-                  }}>
-                    <div style={{ 
-                    // small font weight
-                    fontWeight: 300,
-                    // small font size
-                    fontSize: '1rem',
-                   }}>
-                    {hasSearched 
-                      ? "No stamps found matching your search criteria."
-                      : "Use the search filters on the left to find stamps."}
-                  </div>
-                </div>
-              ) : (
-                stamps.map((stamp, index) => {
-                  return (
-                    <div
-                      ref={index === stamps.length - 1 ? lastStampElementRef : null}
-                      key={`${stamp.stamp_id}-${index}`}
-                      className="stamp-card-wrapper"
-                    >
-                      <StampCard 
-                        country={stamp.country}
-                        name={stamp.set_name}
-                        imageLink={stamp.image_path ? stamp.image_path.replace('./images_all_2/', '') : null}
-                        colorPalette={stamp.color_palette}
-                      />
-                    </div>
-                  );
-                })
-              )}
-            </div>
-            {loading && stamps.length > 0 && (
-              <div style={{ textAlign: 'center', marginTop: '1rem', marginBottom: '1rem' }}>
-                <h3>Loading more stamps...</h3>
+          {error ? (
+            <div className="error-message">{error}</div>
+          ) : visibleStamps.length === 0 ? (
+            loading ? (
+              <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                <h3>Loading stamps...</h3>
               </div>
-            )}
-          </div>
+            ) : (
+              <div style={{
+                width: '100%',
+                textAlign: 'left',
+              }}>
+                <div style={{ 
+                  fontWeight: 300,
+                  fontSize: '1rem',
+                }}>
+                  Use the search filters on the left to find stamps.
+                </div>
+              </div>
+            )
+          ) : (
+            <>
+              <div className="search-results-title">
+                Search Results {totalCount > 0 ? `(${totalCount} stamps found)` : ''}
+              </div>
+              <div className="stamps-container">
+                {visibleStamps.map((stamp, index) => (
+                  <div
+                    key={`${stamp.stamp_id}-${index}`}
+                    ref={index === visibleStamps.length - 1 ? lastStampElementRef : undefined}
+                    className="stamp-card-wrapper"
+                  >
+                    <StampCard
+                      country={stamp.country}
+                      name={stamp.set_name}
+                      imageLink={stamp.image_path ? stamp.image_path.replace('./images_all_2/', '') : null}
+                      colorPalette={stamp.color_palette}
+                    />
+                  </div>
+                ))}
+
+                {loading && (
+                  <div style={{ 
+                    width: '100%',
+                    textAlign: 'center', 
+                    padding: '1rem',
+                    gridColumn: '1 / -1'
+                  }}>
+                    <h3>Loading more stamps...</h3>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

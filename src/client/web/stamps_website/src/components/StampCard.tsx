@@ -1,5 +1,6 @@
 // StampCard.tsx
 import React, { useState, useEffect } from 'react';
+import './StampCard.css';
 
 interface StampCardProps {
   country: string;
@@ -10,6 +11,8 @@ interface StampCardProps {
 
 const StampCard: React.FC<StampCardProps> = ({ country, name, imageLink, colorPalette }) => {
   const [colors, setColors] = useState<string[]>([]);
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [isInView, setIsInView] = useState(false);
 
   useEffect(() => {
     if (colorPalette) {
@@ -24,16 +27,46 @@ const StampCard: React.FC<StampCardProps> = ({ country, name, imageLink, colorPa
     }
   }, [colorPalette]);
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const element = document.getElementById(`stamp-${name}-${country}`);
+    if (element) {
+      observer.observe(element);
+    }
+
+    return () => observer.disconnect();
+  }, [name, country]);
+
+  const handleImageLoad = () => {
+    setIsImageLoaded(true);
+  };
+
   return (
-    <div className="stamp-card">
+    <div id={`stamp-${name}-${country}`} className="stamp-card">
       <div className="stamp-image-container">
-        {imageLink ? (
-          <img 
-            src={`http://localhost:5000/images/${imageLink}`} 
-            alt={`${country} - ${name}`}
-            className="stamp-image"
-          />
-        ) : (
+        {isInView && imageLink && (
+          <>
+            <div className={`image-placeholder ${isImageLoaded ? 'hidden' : ''}`}>
+              Loading...
+            </div>
+            <img
+              src={`http://localhost:5000/images/${imageLink}`}
+              alt={`${country} - ${name}`}
+              className={`stamp-image ${isImageLoaded ? 'loaded' : ''}`}
+              onLoad={handleImageLoad}
+            />
+          </>
+        )}
+        {!imageLink && (
           <div className="no-image">No image available</div>
         )}
       </div>
