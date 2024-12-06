@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import HuePicker from './HuePicker';
+import './SearchBar.css';
 
 interface SearchParams {
   username: string;
@@ -259,16 +260,19 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
       </div>
 
       <div className="search-section">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start'}}>
-          <input
-            type="text"
-            placeholder="Username"
-            value={searchParams.username}
-            onChange={(e) => handleChange('username', e.target.value)}
-            autoComplete="new-password"
-            autoCorrect="off"
-            spellCheck="false"
-          />
+        <div className="search-box">
+          <div className="single-input">
+            <div className={`single-input-title ${searchParams.username ? 'visible' : ''}`}>Username</div>
+            <input
+              type="text"
+              placeholder="Username"
+              value={searchParams.username}
+              onChange={(e) => handleChange('username', e.target.value)}
+              autoComplete="new-password"
+              autoCorrect="off"
+              spellCheck="false"
+            />
+          </div>
 
           <div className="autocomplete-container" ref={countryContainerRef}>
             <input
@@ -322,7 +326,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             )}
           </div>
 
-          <div style={{ display: 'flex', gap: '10px', width: '100%'}}>
+          <div className="input-group">
             <input
               type="number"
               placeholder="Year From"
@@ -376,8 +380,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
 
           <div className="search-results-title">Advanced Search Options</div>
 
-          <div style={{ marginBottom: '0.5rem', width: '100%' }}>
-            {/* <div style={{ marginBottom: '10px', fontWeight: 'bold' }}>Color:</div> */}
+          <div className="hue-picker-wrapper">
             <HuePicker
               value={searchParams.hue}
               saturation={searchParams.saturation}
@@ -422,7 +425,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             spellCheck="false"
           />
 
-          <div style={{ display: 'flex', gap: '10px', width: '100%'}}>
+          <div className="input-group">
             <input
               type="number"
               placeholder="Perforation Horizontal"
@@ -463,7 +466,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             spellCheck="false"
           />
 
-          <div style={{ display: 'flex', gap: '10px', width: '100%'}}>
+          <div className="input-group">
             <input
               type="number"
               placeholder="Sheet Size Horizontal"
@@ -484,7 +487,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '10px', width: '100%'}}>
+          <div className="input-group">
             <input
               type="number"
               placeholder="Stamp Size Horizontal"
