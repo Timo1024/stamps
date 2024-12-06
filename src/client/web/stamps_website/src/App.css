@@ -305,36 +305,6 @@ body::-webkit-scrollbar-thumb:hover {
   border-radius: 4px;
 }
 
-.autocomplete-container {
-  position: relative;
-  width: 100%;
-}
-
-.autocomplete-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background-color: #181b1b;
-  border-radius: 5px;
-  margin-top: -0.4rem;
-  max-height: 200px;
-  overflow-y: auto;
-  z-index: 1000;
-  box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.autocomplete-item {
-  font-size: 0.8rem;
-  padding: 8px 12px;
-  cursor: pointer;
-  text-align: left;
-}
-
-.autocomplete-item:hover {
-  background-color: #222626;
-}
-
 .color-picker-container {
   position: relative;
   width: 100%;
