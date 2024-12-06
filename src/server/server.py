@@ -110,8 +110,11 @@ def get_themes():
 def search_stamps():
     try:
         search_params = request.json
-        page = search_params.get('page', 0)  # 0-based pagination
-        page_size = search_params.get('page_size', 20)  # Default to 20 items per page
+        page = search_params.get('page', 1)  # 1-based pagination from frontend
+        page_size = search_params.get('page_size', 40)  # Default to 40 items per page
+        
+        # Convert to 0-based for database query
+        offset = (page - 1) * page_size
         
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
@@ -202,14 +205,9 @@ def search_stamps():
 
         # Build the base query with all non-color conditions
         base_query = f"""
-            SELECT DISTINCT 
-                s.stamp_id, s.number, s.type, s.denomination, s.description,
-                s.date_of_issue, s.color_palette, s.perforations,
-                s.perforation_horizontal, s.perforation_vertical, s.perforation_keyword,
-                s.sheet_size, s.sheet_size_amount, s.sheet_size_x, s.sheet_size_y,
-                s.height_width, s.height, s.width, s.number_issued,
-                s.value_from, s.value_to, s.image_path, s.set_id,
-                s.mint_condition, s.unused, s.used, s.letter_fdc,
+            SELECT 
+                s.stamp_id, s.number, s.denomination, s.description,
+                s.date_of_issue, s.image_path, s.set_id,
                 s.mint_condition_float, s.unused_float, s.used_float, s.letter_fdc_float,
                 st.name as set_name, st.year, st.country, st.category,
                 u.amount_used, u.amount_unused, u.amount_letter_fdc
@@ -338,17 +336,20 @@ def search_stamps():
                 ORDER BY year DESC, stamp_id DESC
                 LIMIT %s OFFSET %s
             """
-            params.extend([page_size, page * page_size])
+            params.extend([page_size, offset])
         else:
             final_query = f"{base_query} ORDER BY st.year DESC, s.stamp_id DESC LIMIT %s OFFSET %s"
-            params.extend([page_size, page * page_size])
+            params.extend([page_size, offset])
 
         # Execute the actual query
         cursor.execute(final_query, params)
         stamps = cursor.fetchall()
 
         # Get total count for pagination
-        count_query = f"SELECT COUNT(*) as total FROM ({base_query}) as count_table"
+        count_query = f"""
+            SELECT COUNT(*) as total 
+            FROM ({base_query}) as count_table
+        """
         cursor.execute(count_query, params[:-2])  # Exclude LIMIT and OFFSET params
         total_count = cursor.fetchone()['total']
 
