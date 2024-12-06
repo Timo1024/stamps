@@ -2,39 +2,64 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import HuePicker from './HuePicker';
 
-interface SearchPayload {
+interface SearchParams {
   username: string;
   country: string | null;
-  year_from: number | null;
-  year_to: number | null;
-  denomination: number | null;
+  year_from: string | null;
+  year_to: string | null;
+  denomination: string | null;
   theme: string | null;
   keywords: string[] | null;
   date_of_issue: string | null;
   category: string | null;
-  number_issued: number | null;
-  perforation_horizontal: number | null;
-  perforation_vertical: number | null;
+  number_issued: string | null;
+  perforation_horizontal: string | null;
+  perforation_vertical: string | null;
   perforation_keyword: string | null;
-  sheet_size_amount: number | null;
-  sheet_size_horizontal: number | null;
-  sheet_size_vertical: number | null;
-  stamp_size_horizontal: number | null;
-  stamp_size_vertical: number | null;
+  sheet_size_amount: string | null;
+  sheet_size_horizontal: string | null;
+  sheet_size_vertical: string | null;
+  stamp_size_horizontal: string | null;
+  stamp_size_vertical: string | null;
   hue: number | null;
   saturation: number | null;
   tolerance: number | null;
-  max_results: number | null;
+  max_results: string;
+}
+
+interface SearchPayload {
+  username?: string;
+  country?: string;
+  year_from?: number;
+  year_to?: number;
+  denomination?: number;
+  theme?: string;
+  keywords?: string[];
+  date_of_issue?: string;
+  category?: string;
+  number_issued?: number;
+  perforation_horizontal?: number;
+  perforation_vertical?: number;
+  perforation_keyword?: string;
+  sheet_size_amount?: number;
+  sheet_size_horizontal?: number;
+  sheet_size_vertical?: number;
+  stamp_size_horizontal?: number;
+  stamp_size_vertical?: number;
+  hue?: number;
+  saturation?: number;
+  tolerance?: number;
+  max_results: number;
 }
 
 interface SearchBarProps {
-  onSearch: (payload: SearchPayload) => void;
+  onSearch: (params: SearchPayload) => void;
 }
 
 const categories = ['Commemorative', 'Definitive', 'Airmail', 'Special Delivery', 'Postage Due'];
 
 export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
-  const [searchParams, setSearchParams] = useState<SearchPayload>({
+  const [searchParams, setSearchParams] = useState<SearchParams>({
     username: '',
     country: null,
     year_from: null,
@@ -56,7 +81,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     hue: null,
     saturation: null,
     tolerance: 15,
-    max_results: 1000
+    max_results: '1000'
   });
 
   const [countries, setCountries] = useState<string[]>([]);
@@ -113,7 +138,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     };
   }, []);
 
-  const handleChange = (field: keyof SearchPayload, value: any) => {
+  const handleChange = (field: keyof SearchParams, value: any) => {
     setSearchParams((prev) => ({
       ...prev,
       [field]: value,
@@ -167,7 +192,34 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     setLoading(true);
-    onSearch(searchParams);
+
+    const searchPayload: SearchPayload = {
+      max_results: parseInt(searchParams.max_results) || 1000
+    };
+
+    if (searchParams.username) searchPayload.username = searchParams.username;
+    if (searchParams.country) searchPayload.country = searchParams.country;
+    if (searchParams.year_from) searchPayload.year_from = parseInt(searchParams.year_from);
+    if (searchParams.year_to) searchPayload.year_to = parseInt(searchParams.year_to);
+    if (searchParams.denomination) searchPayload.denomination = parseInt(searchParams.denomination);
+    if (searchParams.theme) searchPayload.theme = searchParams.theme;
+    if (searchParams.keywords) searchPayload.keywords = searchParams.keywords;
+    if (searchParams.date_of_issue) searchPayload.date_of_issue = searchParams.date_of_issue;
+    if (searchParams.category) searchPayload.category = searchParams.category;
+    if (searchParams.number_issued) searchPayload.number_issued = parseInt(searchParams.number_issued);
+    if (searchParams.perforation_horizontal) searchPayload.perforation_horizontal = parseInt(searchParams.perforation_horizontal);
+    if (searchParams.perforation_vertical) searchPayload.perforation_vertical = parseInt(searchParams.perforation_vertical);
+    if (searchParams.perforation_keyword) searchPayload.perforation_keyword = searchParams.perforation_keyword;
+    if (searchParams.sheet_size_amount) searchPayload.sheet_size_amount = parseInt(searchParams.sheet_size_amount);
+    if (searchParams.sheet_size_horizontal) searchPayload.sheet_size_horizontal = parseInt(searchParams.sheet_size_horizontal);
+    if (searchParams.sheet_size_vertical) searchPayload.sheet_size_vertical = parseInt(searchParams.sheet_size_vertical);
+    if (searchParams.stamp_size_horizontal) searchPayload.stamp_size_horizontal = parseInt(searchParams.stamp_size_horizontal);
+    if (searchParams.stamp_size_vertical) searchPayload.stamp_size_vertical = parseInt(searchParams.stamp_size_vertical);
+    if (searchParams.hue) searchPayload.hue = searchParams.hue;
+    if (searchParams.saturation) searchPayload.saturation = searchParams.saturation;
+    if (searchParams.tolerance) searchPayload.tolerance = searchParams.tolerance;
+
+    onSearch(searchPayload);
     setLoading(false);
   };
 
@@ -187,7 +239,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
 
   const handleMaxResultsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    handleChange('max_results', value ? Number(value) : null);
+    // Only update if value is empty or a valid number
+    if (value === '' || /^\d+$/.test(value)) {
+      handleChange('max_results', value || '1000');
+    }
   };
 
   return (
@@ -272,7 +327,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
               type="number"
               placeholder="Year From"
               value={searchParams.year_from || ''}
-              onChange={(e) => handleChange('year_from', e.target.value ? Number(e.target.value) : null)}
+              onChange={(e) => handleChange('year_from', e.target.value)}
               autoComplete="new-password"
               autoCorrect="off"
               spellCheck="false"
@@ -281,7 +336,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
               type="number"
               placeholder="Year To"
               value={searchParams.year_to || ''}
-              onChange={(e) => handleChange('year_to', e.target.value ? Number(e.target.value) : null)}
+              onChange={(e) => handleChange('year_to', e.target.value)}
               autoComplete="new-password"
               autoCorrect="off"
               spellCheck="false"
@@ -292,7 +347,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             type="number"
             placeholder="Denomination"
             value={searchParams.denomination || ''}
-            onChange={(e) => handleChange('denomination', e.target.value ? Number(e.target.value) : null)}
+            onChange={(e) => handleChange('denomination', e.target.value)}
             autoComplete="new-password"
             autoCorrect="off"
             spellCheck="false"
@@ -361,7 +416,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             type="number"
             placeholder="Number Issued"
             value={searchParams.number_issued || ''}
-            onChange={(e) => handleChange('number_issued', e.target.value ? Number(e.target.value) : null)}
+            onChange={(e) => handleChange('number_issued', e.target.value)}
             autoComplete="new-password"
             autoCorrect="off"
             spellCheck="false"
@@ -372,7 +427,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
               type="number"
               placeholder="Perforation Horizontal"
               value={searchParams.perforation_horizontal || ''}
-              onChange={(e) => handleChange('perforation_horizontal', e.target.value ? Number(e.target.value) : null)}
+              onChange={(e) => handleChange('perforation_horizontal', e.target.value)}
               autoComplete="new-password"
               autoCorrect="off"
               spellCheck="false"
@@ -381,7 +436,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
               type="number"
               placeholder="Perforation Vertical"
               value={searchParams.perforation_vertical || ''}
-              onChange={(e) => handleChange('perforation_vertical', e.target.value ? Number(e.target.value) : null)}
+              onChange={(e) => handleChange('perforation_vertical', e.target.value)}
               autoComplete="new-password"
               autoCorrect="off"
               spellCheck="false"
@@ -402,7 +457,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             type="number"
             placeholder="Sheet Size Amount"
             value={searchParams.sheet_size_amount || ''}
-            onChange={(e) => handleChange('sheet_size_amount', e.target.value ? Number(e.target.value) : null)}
+            onChange={(e) => handleChange('sheet_size_amount', e.target.value)}
             autoComplete="new-password"
             autoCorrect="off"
             spellCheck="false"
@@ -413,7 +468,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
               type="number"
               placeholder="Sheet Size Horizontal"
               value={searchParams.sheet_size_horizontal || ''}
-              onChange={(e) => handleChange('sheet_size_horizontal', e.target.value ? Number(e.target.value) : null)}
+              onChange={(e) => handleChange('sheet_size_horizontal', e.target.value)}
               autoComplete="new-password"
               autoCorrect="off"
               spellCheck="false"
@@ -422,7 +477,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
               type="number"
               placeholder="Sheet Size Vertical"
               value={searchParams.sheet_size_vertical || ''}
-              onChange={(e) => handleChange('sheet_size_vertical', e.target.value ? Number(e.target.value) : null)}
+              onChange={(e) => handleChange('sheet_size_vertical', e.target.value)}
               autoComplete="new-password"
               autoCorrect="off"
               spellCheck="false"
@@ -434,7 +489,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
               type="number"
               placeholder="Stamp Size Horizontal"
               value={searchParams.stamp_size_horizontal || ''}
-              onChange={(e) => handleChange('stamp_size_horizontal', e.target.value ? Number(e.target.value) : null)}
+              onChange={(e) => handleChange('stamp_size_horizontal', e.target.value)}
               autoComplete="new-password"
               autoCorrect="off"
               spellCheck="false"
@@ -443,7 +498,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
               type="number"
               placeholder="Stamp Size Vertical"
               value={searchParams.stamp_size_vertical || ''}
-              onChange={(e) => handleChange('stamp_size_vertical', e.target.value ? Number(e.target.value) : null)}
+              onChange={(e) => handleChange('stamp_size_vertical', e.target.value)}
               autoComplete="new-password"
               autoCorrect="off"
               spellCheck="false"
@@ -451,11 +506,12 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
           </div>
 
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
+            pattern="\d*"
             placeholder="Max Results"
-            value={searchParams.max_results || ''}
+            value={searchParams.max_results}
             onChange={handleMaxResultsChange}
-            min="1"
             className="max-results-input"
           />
         </div>
