@@ -186,7 +186,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   return (
     <div className="search-bar">
       <div className="search-header">
-        <h2>Search Filters</h2>
+        <div className="search-results-title">Search Filters</div>
         <button 
           className="search-submit-button"
           onClick={handleSubmit}
@@ -312,7 +312,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             className="keywords-textarea"
           />
 
-          <div style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '10px' }}>Advanced Search Options</div>
+          <div className="search-results-title">Advanced Search Options</div>
 
           <div style={{ marginBottom: '0.5rem', width: '100%' }}>
             {/* <div style={{ marginBottom: '10px', fontWeight: 'bold' }}>Color:</div> */}

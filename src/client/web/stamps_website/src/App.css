@@ -81,6 +81,7 @@ body::-webkit-scrollbar-thumb:hover {
   width: 100%;
   box-sizing: border-box;
   align-items: start;
+  margin-top: 2rem;
 }
 
 .stamp-card-wrapper {
@@ -383,6 +384,9 @@ body::-webkit-scrollbar-thumb:hover {
   text-align: left;
   margin-bottom: 20px;
   margin-top: 0px;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 10px;
 }
 
 .autocomplete-container {

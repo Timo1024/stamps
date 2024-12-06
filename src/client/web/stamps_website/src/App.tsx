@@ -202,7 +202,7 @@ function App() {
           {error && <p className="error-message">{error}</p>}
 
           <div>
-            <h2 className="search-results-title">Search Results:</h2>
+            <div className="search-results-title">Search Results:</div>
             <div className="stamps-container">
               {loading && !stamps.length ? (
                 <div style={{ width: '100%', textAlign: 'left' }}>
