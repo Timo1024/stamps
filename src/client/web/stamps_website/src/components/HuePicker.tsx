@@ -445,7 +445,10 @@ const HuePicker: React.FC<HuePickerProps> = ({
                 step="0.1"
                 value={baseTolerance}
                 onChange={(e) => onToleranceChange(Number(e.target.value))}
-                style={{ width: '100%' }}
+              style={{
+                width: '99%',
+                // paddingRight: '10px',
+              }}
                 className="tolerance-range"
               />
             </div>

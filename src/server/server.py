@@ -133,10 +133,6 @@ def search_stamps():
             query += " AND st.year <= %s"
             params.append(int(search_params['year_to']))
 
-        if search_params.get('color'):
-            query += " AND s.color_palette LIKE %s"
-            params.append(f"%{search_params['color']}%")
-
         if search_params.get('set_name'):
             query += " AND st.name LIKE %s"
             params.append(f"%{search_params['set_name']}%")
@@ -152,6 +148,30 @@ def search_stamps():
         cursor.close()
         connection.close()
 
+        # Filter results by color if hue and saturation are provided
+        if search_params.get('hue') is not None and search_params.get('saturation') is not None:
+            hue = float(search_params['hue'])
+            saturation = float(search_params['saturation'])
+            tolerance = float(search_params.get('tolerance', 15))  # Default tolerance of 15
+            
+            filtered_results = []
+            for result in results:
+                if result['color_palette']:
+                    try:
+                        # Clean and parse the color palette string
+                        # Format: '[''#e6e2e0'', ''#cd98a9'', ''#dfb6c3'', ''#ccb6ba'', ''#c4acac'']'
+                        color_str = result['color_palette'].strip('[]')
+                        colors = [c.strip().strip("'") for c in color_str.split(',')]
+                        colors = [c.strip("'") for c in colors]  # Remove additional quotes
+                        
+                        # Check if any color in the palette matches the target hue/saturation
+                        if any(color_matches(color, hue, saturation, tolerance) for color in colors if color.startswith('#')):
+                            filtered_results.append(result)
+                    except Exception as e:
+                        print(f"Error processing color palette: {str(e)}")
+                        continue
+            results = filtered_results
+
         return jsonify({
             'stamps': results,
             'total_count': len(results)
@@ -160,6 +180,46 @@ def search_stamps():
     except Exception as e:
         print(f"Error in search_stamps: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
+def rgb_to_hsv(r, g, b):
+    r, g, b = r/255.0, g/255.0, b/255.0
+    cmax = max(r, g, b)
+    cmin = min(r, g, b)
+    diff = cmax - cmin
+
+    if cmax == cmin:
+        h = 0
+    elif cmax == r:
+        h = (60 * ((g-b)/diff) + 360) % 360
+    elif cmax == g:
+        h = (60 * ((b-r)/diff) + 120) % 360
+    else:
+        h = (60 * ((r-g)/diff) + 240) % 360
+
+    s = 0 if cmax == 0 else (diff / cmax) * 100
+    v = cmax * 100
+    return h, s, v
+
+def hex_to_rgb(hex_color):
+    hex_color = hex_color.lstrip('#')
+    return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+
+def color_matches(color_hex, target_hue, target_saturation, tolerance):
+    try:
+        r, g, b = hex_to_rgb(color_hex)
+        h, s, v = rgb_to_hsv(r, g, b)
+        
+        # Compare hue with tolerance, considering the circular nature of hue
+        hue_diff = min((h - target_hue) % 360, (target_hue - h) % 360)
+        hue_matches = hue_diff <= tolerance
+        
+        # Compare saturation with tolerance
+        saturation_diff = abs(s - target_saturation)
+        saturation_matches = saturation_diff <= tolerance
+        
+        return hue_matches and saturation_matches
+    except:
+        return False
 
 @app.route('/api/stamps/estimate', methods=['POST'])
 def estimate_stamps():
@@ -205,74 +265,6 @@ def estimate_stamps():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-def hex_to_hsl(hex_color):
-    # Remove the hash if it exists
-    hex_color = hex_color.lstrip('#')
-    
-    # Convert hex to RGB
-    r = int(hex_color[0:2], 16) / 255.0
-    g = int(hex_color[2:4], 16) / 255.0
-    b = int(hex_color[4:6], 16) / 255.0
-    
-    # Convert RGB to HSL
-    h, l, s = colorsys.rgb_to_hls(r, g, b)
-    
-    # Convert to degrees and percentages
-    h = h * 360
-    s = s * 100
-    l = l * 100
-    
-    return h, s, l
-
-def are_colors_similar(color1_hex, color2_hex, tolerance_degrees):
-    """
-    Compare two colors in HSL space with variable tolerance
-    """
-    # Convert hex to HSL
-    def hex_to_hsl(hex_color):
-        # Remove the # if present
-        hex_color = hex_color.lstrip('#')
-        # Convert hex to RGB
-        rgb = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
-        # Convert RGB to HSL
-        r, g, b = [x/255.0 for x in rgb]
-        max_c = max(r, g, b)
-        min_c = min(r, g, b)
-        l = (max_c + min_c) / 2.0
-        
-        if max_c == min_c:
-            h = s = 0.0
-        else:
-            d = max_c - min_c
-            s = d / (2.0 - max_c - min_c) if l > 0.5 else d / (max_c + min_c)
-            if max_c == r:
-                h = (g - b) / d + (6.0 if g < b else 0.0)
-            elif max_c == g:
-                h = (b - r) / d + 2.0
-            else:
-                h = (r - g) / d + 4.0
-            h *= 60.0
-            if h < 0:
-                h += 360.0
-                
-        return (h, s * 100, l * 50)
-
-    # Get HSL values
-    h1, s1, _ = hex_to_hsl(color1_hex)
-    h2, s2, _ = hex_to_hsl(color2_hex)
-    
-    # Calculate color delta (difference in saturation)
-    delta = abs(s1 - s2) / 100.0
-    
-    # Adjust tolerance based on delta
-    adjusted_tolerance = tolerance_degrees * (1 + (1 - delta) * 2)
-    
-    # Calculate hue difference considering the circular nature of hue
-    hue_diff = min(abs(h1 - h2), 360 - abs(h1 - h2))
-    
-    # Colors are similar if within adjusted tolerance
-    return hue_diff <= adjusted_tolerance
 
 if __name__ == '__main__':
     app.run(debug=True)
