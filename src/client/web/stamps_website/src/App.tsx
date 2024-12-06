@@ -99,7 +99,8 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1);
+  const [hasSearched, setHasSearched] = useState(false);
   const [gridColumns, setGridColumns] = useState(4); // Default value
   const basePageSize = 40; // Base number of items per page
   const [currentSearchPayload, setCurrentSearchPayload] = useState<SearchPayload | null>(null);
@@ -152,32 +153,30 @@ function App() {
     if (node) observer.current.observe(node);
   }, [loading, hasMore]);
 
-  const fetchStamps = useCallback(async (payload: SearchPayload, isNewSearch: boolean = true) => {
+  const fetchStamps = useCallback(async (searchPayload: SearchPayload, isNewSearch: boolean = false) => {
     try {
       setLoading(true);
-      setError('');
+      setHasSearched(true);
       
-      const searchPayload = {
-        ...payload,
-        page: isNewSearch ? 0 : page,
-        page_size: getAdjustedPageSize()
-      };
-
       if (isNewSearch) {
-        setStamps([]);
-        setPage(0);
-        setHasMore(true);
+        setStamps([]); // Clear stamps immediately
+        setPage(1);
         setCurrentSearchPayload(searchPayload);
       }
 
-      const response = await axios.post<SearchResponse>(`http://localhost:5000/api/stamps/search`, searchPayload);
+      const response = await axios.post<SearchResponse>(`http://localhost:5000/api/stamps/search`, {
+        ...searchPayload,
+        page: isNewSearch ? 1 : page,
+        page_size: getAdjustedPageSize()
+      });
       
       setStamps(prev => isNewSearch ? response.data.stamps : [...prev, ...response.data.stamps]);
       setHasMore(response.data.has_more);
-      setError('');
+      setError(null);
     } catch (err) {
       setError('Error fetching stamps data.');
-      console.error("Error fetching stamps data:", err);
+      setStamps([]);
+      setHasMore(false);
     } finally {
       setLoading(false);
     }
@@ -185,7 +184,7 @@ function App() {
 
   // Effect to load more stamps when page changes
   useEffect(() => {
-    if (page > 0 && currentSearchPayload) {
+    if (page > 1 && currentSearchPayload) {
       fetchStamps(currentSearchPayload, false);
     }
   }, [page]);
@@ -205,9 +204,30 @@ function App() {
           <div>
             <h2 className="search-results-title">Search Results:</h2>
             <div className="stamps-container">
-              {stamps.length > 0 ? (
+              {loading && !stamps.length ? (
+                <div style={{ width: '100%', textAlign: 'left' }}>
+                  <div style={{ fontWeight: 300, fontSize: '1rem' }}>Searching for stamps...</div>
+                </div>
+              ) : !loading && !stamps.length ? (
+                  <div style={{
+                    width: '100%',
+                    // textAlign: 'center',
+                    // make text align left
+                    textAlign: 'left',
+                  }}>
+                    <div style={{ 
+                    // small font weight
+                    fontWeight: 300,
+                    // small font size
+                    fontSize: '1rem',
+                   }}>
+                    {hasSearched 
+                      ? "No stamps found matching your search criteria."
+                      : "Use the search filters on the left to find stamps."}
+                  </div>
+                </div>
+              ) : (
                 stamps.map((stamp, index) => {
-                  console.log('Stamp color palette:', stamp.color_palette);
                   return (
                     <div
                       ref={index === stamps.length - 1 ? lastStampElementRef : null}
@@ -223,11 +243,13 @@ function App() {
                     </div>
                   );
                 })
-              ) : (
-                <p>No stamps found matching your search criteria.</p>
               )}
-              {loading && <div className="loading">Loading more stamps...</div>}
             </div>
+            {loading && stamps.length > 0 && (
+              <div style={{ textAlign: 'center', marginTop: '1rem', marginBottom: '1rem' }}>
+                <h3>Loading more stamps...</h3>
+              </div>
+            )}
           </div>
         </div>
       </div>
