@@ -207,7 +207,7 @@ def search_stamps():
         base_query = f"""
             SELECT 
                 s.stamp_id, s.number, s.denomination, s.description,
-                s.date_of_issue, s.image_path, s.set_id,
+                s.date_of_issue, s.image_path, s.set_id, s.color_palette,
                 s.mint_condition_float, s.unused_float, s.used_float, s.letter_fdc_float,
                 st.name as set_name, st.year, st.country, st.category,
                 u.amount_used, u.amount_unused, u.amount_letter_fdc
