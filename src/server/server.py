@@ -218,7 +218,10 @@ def search_stamps():
 
         # Build the base query
         query = """
-            SELECT DISTINCT s.*, st.country, st.year, st.name as set_name
+            SELECT s.stamp_id, s.number, s.type, s.denomination, s.color, 
+                   s.description, s.themes, s.image_path, s.color_palette,
+                   s.value_from, s.value_to,
+                   st.country, st.year, st.name as set_name, st.set_description
             FROM stamps s
             JOIN sets st ON s.set_id = st.set_id
             WHERE 1=1
@@ -241,6 +244,45 @@ def search_stamps():
         if search_params.get('set_name'):
             query += " AND st.name LIKE %s"
             params.append(f"%{search_params['set_name']}%")
+
+        # Theme filtering
+        if search_params.get('theme'):
+            query += " AND s.themes LIKE %s"
+            params.append(f"%{search_params['theme']}%")
+
+        # Denomination filtering
+        if search_params.get('denomination'):
+            try:
+                denomination = float(search_params['denomination'])
+                query += " AND (s.value_from <= %s AND s.value_to >= %s)"
+                params.extend([denomination, denomination])
+            except ValueError:
+                print(f"Invalid denomination: {search_params['denomination']}")
+
+        # Keyword filtering
+        if search_params.get('keywords'):
+            # Handle both list and string inputs
+            keywords = search_params['keywords']
+            if isinstance(keywords, str):
+                keywords = [kw.strip() for kw in keywords.split(',') if kw.strip()]
+            elif isinstance(keywords, list):
+                keywords = [str(kw).strip() for kw in keywords if kw]
+            
+            # Construct a complex condition to check if ALL keywords are present
+            keyword_conditions = []
+            for keyword in keywords:
+                keyword_conditions.append("""
+                    (
+                        s.description LIKE %s OR 
+                        st.name LIKE %s OR 
+                        st.set_description LIKE %s
+                    )
+                """)
+                params.extend([f"%{keyword}%", f"%{keyword}%", f"%{keyword}%"])
+            
+            # Combine keyword conditions
+            if keyword_conditions:
+                query += " AND " + " AND ".join(f"({cond})" for cond in keyword_conditions)
 
         # Add themes filter
         query += " AND (s.themes IS NOT NULL AND s.themes != '[]')"

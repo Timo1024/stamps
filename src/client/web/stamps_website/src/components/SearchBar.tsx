@@ -199,34 +199,41 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, currentUser }) =
     e.preventDefault();
     setLoading(true);
 
-    const searchPayload: SearchPayload = {
-      max_results: parseInt(searchParams.max_results) || 1000
+    // Prepare the payload
+    const payload: SearchPayload = {
+      max_results: parseInt(searchParams.max_results || '1000')
     };
 
-    if (searchParams.show_owned) searchPayload.username = currentUser;
-    // if (searchParams.username) searchPayload.username = searchParams.username;
-    if (searchParams.country) searchPayload.country = searchParams.country;
-    if (searchParams.year_from) searchPayload.year_from = parseInt(searchParams.year_from);
-    if (searchParams.year_to) searchPayload.year_to = parseInt(searchParams.year_to);
-    if (searchParams.denomination) searchPayload.denomination = parseInt(searchParams.denomination);
-    if (searchParams.theme) searchPayload.theme = searchParams.theme;
-    if (searchParams.keywords) searchPayload.keywords = searchParams.keywords;
-    if (searchParams.date_of_issue) searchPayload.date_of_issue = searchParams.date_of_issue;
-    if (searchParams.category) searchPayload.category = searchParams.category;
-    if (searchParams.number_issued) searchPayload.number_issued = parseInt(searchParams.number_issued);
-    if (searchParams.perforation_horizontal) searchPayload.perforation_horizontal = parseInt(searchParams.perforation_horizontal);
-    if (searchParams.perforation_vertical) searchPayload.perforation_vertical = parseInt(searchParams.perforation_vertical);
-    if (searchParams.perforation_keyword) searchPayload.perforation_keyword = searchParams.perforation_keyword;
-    if (searchParams.sheet_size_amount) searchPayload.sheet_size_amount = parseInt(searchParams.sheet_size_amount);
-    if (searchParams.sheet_size_horizontal) searchPayload.sheet_size_horizontal = parseInt(searchParams.sheet_size_horizontal);
-    if (searchParams.sheet_size_vertical) searchPayload.sheet_size_vertical = parseInt(searchParams.sheet_size_vertical);
-    if (searchParams.stamp_size_horizontal) searchPayload.stamp_size_horizontal = parseInt(searchParams.stamp_size_horizontal);
-    if (searchParams.stamp_size_vertical) searchPayload.stamp_size_vertical = parseInt(searchParams.stamp_size_vertical);
-    if (searchParams.hue) searchPayload.hue = searchParams.hue;
-    if (searchParams.saturation) searchPayload.saturation = searchParams.saturation;
-    if (searchParams.tolerance) searchPayload.tolerance = searchParams.tolerance;
+    // Add non-null parameters
+    if (searchParams.country) payload.country = searchParams.country;
+    if (searchParams.year_from) payload.year_from = parseInt(searchParams.year_from);
+    if (searchParams.year_to) payload.year_to = parseInt(searchParams.year_to);
+    if (searchParams.theme) payload.theme = searchParams.theme;
+    
+    // Handle denomination
+    if (searchParams.denomination) {
+      payload.denomination = parseFloat(searchParams.denomination);
+    }
 
-    onSearch(searchPayload);
+    // Handle keywords
+    if (keywordsText) {
+      payload.keywords = keywordsText.split(',').map(kw => kw.trim()).filter(kw => kw);
+    }
+
+    // Handle username for owned stamps
+    if (searchParams.show_owned) {
+      payload.username = currentUser;
+    }
+
+    // Add color filtering if available
+    if (searchParams.hue !== null && searchParams.saturation !== null) {
+      payload.hue = searchParams.hue;
+      payload.saturation = searchParams.saturation;
+      payload.tolerance = searchParams.tolerance || 15;
+    }
+
+    // Perform search
+    onSearch(payload);
     setLoading(false);
   };
 
@@ -240,7 +247,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, currentUser }) =
   const handleKeywordsChange = (value: string) => {
     setKeywordsText(value);
     // Only split into keywords when submitting or when there's actual content
-    const keywords = value.trim() ? value.split(',').map(k => k.trim()).filter(k => k) : null;
+    const keywords = value.trim() ? value.split(',').map(k => k.trim()).filter(k => k) : [];
     handleChange('keywords', keywords);
   };
 
