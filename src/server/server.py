@@ -199,6 +199,8 @@ def search_stamps():
             FROM stamps s
             JOIN sets st ON s.set_id = st.set_id
             WHERE 1=1
+            AND s.themes IS NOT NULL
+            AND s.themes != '[]'
         """
         params = []
 
@@ -333,6 +335,8 @@ def estimate_stamps():
             FROM sets st
             INNER JOIN stamps s ON s.set_id = st.set_id
             WHERE {' AND '.join(conditions)}
+            AND s.themes IS NOT NULL
+            AND s.themes != '[]'
         """
         
         cursor.execute(count_query, params)
