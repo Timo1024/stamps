@@ -192,15 +192,17 @@ body::-webkit-scrollbar-thumb:hover {
 }
 
 .title {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  background-color: #181b1b;
-  padding: 1rem;
-  z-index: 100;
-  font-size: 1.5rem;
-  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: #222626;
+  /* border-bottom: 1px solid #000; */
+}
+
+.user-info {
+  font-size: 0.9rem;
+  color: #fff;
 }
 
 .input-container {
@@ -294,6 +296,8 @@ body::-webkit-scrollbar-thumb:hover {
   overflow-y: auto;
   box-sizing: border-box;
   width: calc(100% - max(350px, min(30vw, 500px)));
+  scrollbar-width: thin;  /* Firefox */
+  scrollbar-color: #2c3131 #181b1b;  /* Firefox */
 }
 
 .error-message {

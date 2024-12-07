@@ -5,6 +5,7 @@ import './App.css';
 import StampCard from './components/StampCard';
 import SearchBar from './components/SearchBar';
 import HuePicker from './components/HuePicker';
+import Auth from './components/Auth';
 
 interface Stamp {
   // added_at: string;
@@ -109,6 +110,13 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(0);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState<string | null>(null);
+
+  const handleAuthSuccess = (username: string) => {
+    setIsAuthenticated(true);
+    setCurrentUser(username);
+  };
 
   // Intersection Observer for infinite scroll
   const observer = useRef<IntersectionObserver>();
@@ -176,70 +184,79 @@ function App() {
 
   return (
     <div className="App">
-      <div className="title">Stamp Collection Search</div>
-      
-      <div className="main-container">
-        <div className="search-sidebar">
-          <SearchBar onSearch={handleSearch} />
-        </div>
+      {!isAuthenticated ? (
+        <Auth onAuthSuccess={handleAuthSuccess} />
+      ) : (
+        <>
+          <div className="title">
+            <span>Stamp Collection Search</span>
+            <span className="user-info">Welcome, {currentUser}!</span>
+          </div>
+          
+          <div className="main-container">
+            <div className="search-sidebar">
+              <SearchBar onSearch={handleSearch} />
+            </div>
 
-        <div className="results-container">
-          {error ? (
-            <div className="error-message">{error}</div>
-          ) : visibleStamps.length === 0 ? (
-            loading ? (
-              <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-                <h3>Loading stamps...</h3>
-              </div>
-            ) : (
-              <div style={{
-                width: '100%',
-                textAlign: 'left',
-              }}>
-                <div style={{ 
-                  fontWeight: 300,
-                  fontSize: '1rem',
-                }}>
-                  Use the search filters on the left to find stamps.
-                </div>
-              </div>
-            )
-          ) : (
-            <>
-              <div className="search-results-title">
-                Search Results {totalCount > 0 ? `(${totalCount} stamps found)` : ''}
-              </div>
-              <div className="stamps-container">
-                {visibleStamps.map((stamp, index) => (
-                  <div
-                    key={`${stamp.stamp_id}-${index}`}
-                    ref={index === visibleStamps.length - 1 ? lastStampElementRef : undefined}
-                    className="stamp-card-wrapper"
-                  >
-                    <StampCard
-                      country={stamp.country}
-                      name={stamp.set_name}
-                      imageLink={stamp.image_path ? stamp.image_path.replace('./images_all_2/', '') : null}
-                      colorPalette={stamp.color_palette}
-                    />
+            <div className="results-container">
+              {error ? (
+                <div className="error-message">{error}</div>
+              ) : visibleStamps.length === 0 ? (
+                loading ? (
+                  <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                    <h3>Loading stamps...</h3>
                   </div>
-                ))}
-
-                {loading && (
-                  <div style={{ 
+                ) : (
+                  <div style={{
                     width: '100%',
-                    textAlign: 'center', 
-                    padding: '1rem',
-                    gridColumn: '1 / -1'
+                    textAlign: 'left',
                   }}>
-                    <h3>Loading more stamps...</h3>
+                    <div style={{ 
+                      fontWeight: 300,
+                      fontSize: '1rem',
+                    }}>
+                      Use the search filters on the left to find stamps.
+                    </div>
                   </div>
-                )}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
+                )
+              ) : (
+                <>
+                  <div className="search-results-title">
+                    Search Results {totalCount > 0 ? `(${totalCount} stamps found)` : ''}
+                  </div>
+                  <div className="stamps-container">
+                    {visibleStamps.map((stamp, index) => (
+                      <div
+                        key={`${stamp.stamp_id}-${index}`}
+                        ref={index === visibleStamps.length - 1 ? lastStampElementRef : undefined}
+                        className="stamp-card-wrapper"
+                      >
+                        <StampCard
+                          country={stamp.country}
+                          name={stamp.set_name}
+                          imageLink={stamp.image_path ? stamp.image_path.replace('./images_all_2/', '') : null}
+                          colorPalette={stamp.color_palette}
+                        />
+                      </div>
+                    ))}
+
+                    {loading && (
+                      <div style={{ 
+                        width: '100%',
+                        textAlign: 'center', 
+                        padding: '1rem',
+                        gridColumn: '1 / -1'
+                      }}>
+                        <h3>Loading more stamps...</h3>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

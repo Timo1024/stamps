@@ -5,9 +5,91 @@ import json
 import re
 import colorsys
 from utils.database_helpers import get_user_id_by_username, get_db_connection
+import bcrypt
+from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)
+
+# Authentication endpoints
+@app.route('/api/register', methods=['POST'])
+def register():
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        email = data.get('email')
+        password = data.get('password')
+
+        if not all([username, email, password]):
+            return jsonify({'success': False, 'message': 'All fields are required'}), 400
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        # Check if username already exists
+        cursor.execute('SELECT user_id FROM users WHERE username = %s', (username,))
+        if cursor.fetchone():
+            return jsonify({'success': False, 'message': 'Username already exists'}), 400
+
+        # Check if email already exists
+        cursor.execute('SELECT user_id FROM users WHERE email = %s', (email,))
+        if cursor.fetchone():
+            return jsonify({'success': False, 'message': 'Email already exists'}), 400
+
+        # Hash password
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+        # Insert new user
+        cursor.execute(
+            'INSERT INTO users (username, email, password_hash) VALUES (%s, %s, %s)',
+            (username, email, hashed_password)
+        )
+        connection.commit()
+
+        return jsonify({'success': True, 'message': 'Registration successful'})
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+    finally:
+        if 'connection' in locals():
+            cursor.close()
+            connection.close()
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        password = data.get('password')
+
+        if not all([username, password]):
+            return jsonify({'success': False, 'message': 'Username and password are required'}), 400
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        # Get user
+        cursor.execute('SELECT * FROM users WHERE username = %s', (username,))
+        user = cursor.fetchone()
+
+        if not user or not bcrypt.checkpw(password.encode('utf-8'), user['password_hash'].encode('utf-8')):
+            return jsonify({'success': False, 'message': 'Invalid username or password'}), 401
+
+        return jsonify({
+            'success': True,
+            'message': 'Login successful',
+            'user': {
+                'username': user['username'],
+                'email': user['email']
+            }
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+    finally:
+        if 'connection' in locals():
+            cursor.close()
+            connection.close()
 
 # Route to fetch stamps based on set_id
 @app.route('/api/stamps/by_set_id/<int:set_id>', methods=['GET'])
