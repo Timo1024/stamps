@@ -281,13 +281,13 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, currentUser }) =
           </div> */}
           <div className="toggle-container">
             <label className="toggle-switch">
+              <span className="toggle-label">Show Only My Stamps</span>
               <input
                 type="checkbox"
                 checked={searchParams.show_owned}
                 onChange={(e) => handleChange('show_owned', e.target.checked)}
               />
               <span className="toggle-slider"></span>
-              <span className="toggle-label">Show Only My Stamps</span>
             </label>
           </div>
 
