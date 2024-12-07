@@ -137,10 +137,7 @@ function App() {
   useEffect(() => {
     const start = page * PAGE_SIZE;
     const end = start + PAGE_SIZE;
-    setVisibleStamps(prevStamps => {
-      const newStamps = [...prevStamps, ...allStamps.slice(start, end)];
-      return newStamps;
-    });
+    setVisibleStamps(allStamps.slice(0, end));
   }, [page, allStamps]);
 
   const handleSearch = useCallback(async (searchParams: any) => {
@@ -187,7 +184,7 @@ function App() {
       {!isAuthenticated ? (
         <Auth onAuthSuccess={handleAuthSuccess} />
       ) : (
-        <>
+        <div>
           <div className="title">
             <span>Stamp Collection Search</span>
             <span className="user-info">Welcome, {currentUser}!</span>
@@ -195,7 +192,7 @@ function App() {
           
           <div className="main-container">
             <div className="search-sidebar">
-              <SearchBar onSearch={handleSearch} />
+              <SearchBar onSearch={handleSearch} currentUser={currentUser || ''} />
             </div>
 
             <div className="results-container">
@@ -220,7 +217,7 @@ function App() {
                   </div>
                 )
               ) : (
-                <>
+                <div>
                   <div className="search-results-title">
                     Search Results {totalCount > 0 ? `(${totalCount} stamps found)` : ''}
                   </div>
@@ -251,11 +248,11 @@ function App() {
                       </div>
                     )}
                   </div>
-                </>
+                </div>
               )}
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

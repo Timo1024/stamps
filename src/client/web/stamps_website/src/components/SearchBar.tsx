@@ -4,7 +4,8 @@ import HuePicker from './HuePicker';
 import './SearchBar.css';
 
 interface SearchParams {
-  username: string;
+  // username: string;
+  show_owned: boolean;
   country: string | null;
   year_from: string | null;
   year_to: string | null;
@@ -55,13 +56,15 @@ interface SearchPayload {
 
 interface SearchBarProps {
   onSearch: (params: SearchPayload) => void;
+  currentUser: string;
 }
 
 const categories = ['Commemorative', 'Definitive', 'Airmail', 'Special Delivery', 'Postage Due'];
 
-export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
+export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, currentUser }) => {
   const [searchParams, setSearchParams] = useState<SearchParams>({
-    username: '',
+    // username: '',
+    show_owned: false,
     country: null,
     year_from: null,
     year_to: null,
@@ -200,7 +203,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
       max_results: parseInt(searchParams.max_results) || 1000
     };
 
-    if (searchParams.username) searchPayload.username = searchParams.username;
+    if (searchParams.show_owned) searchPayload.username = currentUser;
+    // if (searchParams.username) searchPayload.username = searchParams.username;
     if (searchParams.country) searchPayload.country = searchParams.country;
     if (searchParams.year_from) searchPayload.year_from = parseInt(searchParams.year_from);
     if (searchParams.year_to) searchPayload.year_to = parseInt(searchParams.year_to);
@@ -263,7 +267,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
 
       <div className="search-section">
         <div className="search-box">
-          <div className="single-input">
+          {/* <div className="single-input">
             <div className={`single-input-title ${searchParams.username ? 'visible' : ''}`}>Username</div>
             <input
               type="text"
@@ -274,6 +278,17 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
               autoCorrect="off"
               spellCheck="false"
             />
+          </div> */}
+          <div className="toggle-container">
+            <label className="toggle-switch">
+              <input
+                type="checkbox"
+                checked={searchParams.show_owned}
+                onChange={(e) => handleChange('show_owned', e.target.checked)}
+              />
+              <span className="toggle-slider"></span>
+              <span className="toggle-label">Show Only My Stamps</span>
+            </label>
           </div>
 
           <div className="autocomplete-container" ref={countryContainerRef}>

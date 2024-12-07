@@ -193,42 +193,92 @@ def search_stamps():
     try:
         search_params = request.get_json()
         
+        # Validate and correct year inputs
+        year_from = search_params.get('year_from')
+        year_to = search_params.get('year_to')
+        
+        # Ensure year inputs are valid
+        if year_from is not None:
+            try:
+                year_from = int(year_from)
+                if year_from < 1800 or year_from > 2100:
+                    print(f"Warning: Unusual year_from value: {year_from}")
+            except ValueError:
+                print(f"Invalid year_from: {year_from}")
+                year_from = None
+
+        if year_to is not None:
+            try:
+                year_to = int(year_to)
+                if year_to < 1800 or year_to > 2100:
+                    print(f"Warning: Unusual year_to value: {year_to}")
+            except ValueError:
+                print(f"Invalid year_to: {year_to}")
+                year_to = None
+
         # Build the base query
         query = """
-            SELECT s.*, st.country, st.year, st.name as set_name
+            SELECT DISTINCT s.*, st.country, st.year, st.name as set_name
             FROM stamps s
             JOIN sets st ON s.set_id = st.set_id
             WHERE 1=1
-            AND s.themes IS NOT NULL
-            AND s.themes != '[]'
         """
         params = []
 
-        # Add search conditions
+        # Add conditions for non-username filters
         if search_params.get('country'):
             query += " AND st.country LIKE %s"
             params.append(f"%{search_params['country']}%")
         
-        if search_params.get('year_from'):
+        if year_from is not None:
             query += " AND st.year >= %s"
-            params.append(int(search_params['year_from']))
+            params.append(year_from)
             
-        if search_params.get('year_to'):
+        if year_to is not None:
             query += " AND st.year <= %s"
-            params.append(int(search_params['year_to']))
+            params.append(year_to)
 
         if search_params.get('set_name'):
             query += " AND st.name LIKE %s"
             params.append(f"%{search_params['set_name']}%")
 
-        # Add ordering
-        query += " ORDER BY st.year DESC, s.stamp_id DESC"
+        # Add themes filter
+        query += " AND (s.themes IS NOT NULL AND s.themes != '[]')"
+
+        # Add username filter if provided
+        if search_params.get('username'):
+            query += """
+                AND s.stamp_id IN (
+                    SELECT stamp_id 
+                    FROM user_stamps us 
+                    JOIN users u ON us.user_id = u.user_id 
+                    WHERE u.username = %s
+                )
+            """
+            params.append(search_params['username'])
+
+        # Add ordering and limit
+        query += " ORDER BY st.year DESC, s.stamp_id DESC LIMIT 1000"
 
         # Execute query
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
+        
+        # Debug logging
+        print("Search Query:", query)
+        print("Search Params:", search_params)
+        print("Query Params:", params)
+        
         cursor.execute(query, params)
         results = cursor.fetchall()
+        
+        # Print additional debug information
+        print(f"Total results: {len(results)}")
+        if len(results) > 0:
+            print("Sample results:")
+            for result in results[:5]:  # Print first 5 results
+                print(f"Stamp ID: {result['stamp_id']}, Country: {result['country']}, Year: {result['year']}, Set Name: {result['set_name']}")
+
         cursor.close()
         connection.close()
 
@@ -243,7 +293,6 @@ def search_stamps():
                 if result['color_palette']:
                     try:
                         # Clean and parse the color palette string
-                        # Format: '[''#e6e2e0'', ''#cd98a9'', ''#dfb6c3'', ''#ccb6ba'', ''#c4acac'']'
                         color_str = result['color_palette'].strip('[]')
                         colors = [c.strip().strip("'") for c in color_str.split(',')]
                         colors = [c.strip("'") for c in colors]  # Remove additional quotes
@@ -263,6 +312,72 @@ def search_stamps():
 
     except Exception as e:
         print(f"Error in search_stamps: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/stamps/estimate', methods=['POST'])
+def estimate_stamps():
+    try:
+        search_params = request.json
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        # Initialize conditions and parameters for the query
+        conditions = ["1=1"]
+        params = []
+
+        # Add search conditions
+        if search_params.get('country'):
+            conditions.append("st.country LIKE %s")
+            params.append(f"%{search_params['country']}%")
+
+        if search_params.get('year_from'):
+            conditions.append("st.year >= %s")
+            params.append(search_params['year_from'])
+
+        if search_params.get('year_to'):
+            conditions.append("st.year <= %s")
+            params.append(search_params['year_to'])
+
+        # Add username filter if provided
+        if search_params.get('username'):
+            conditions.append("""
+                s.stamp_id IN (
+                    SELECT stamp_id 
+                    FROM user_stamps us 
+                    JOIN users u ON us.user_id = u.user_id 
+                    WHERE u.username = %s
+                )
+            """)
+            params.append(search_params['username'])
+
+        # Quick count query using joins for username filtering
+        count_query = f"""
+            SELECT COUNT(DISTINCT s.stamp_id) as total 
+            FROM sets st
+            INNER JOIN stamps s ON s.set_id = st.set_id
+            WHERE {' AND '.join(conditions)}
+            AND s.themes IS NOT NULL
+            AND s.themes != '[]'
+        """
+        
+        # Print debug information
+        print("Estimate Query:", count_query)
+        print("Estimate Params:", params)
+        
+        cursor.execute(count_query, params)
+        total_count = cursor.fetchone()['total']
+
+        print(f"Estimated total count: {total_count}")
+
+        cursor.close()
+        connection.close()
+
+        return jsonify({
+            'estimated_count': total_count
+        })
+
+    except Exception as e:
+        print(f"Error in estimate_stamps: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 def rgb_to_hsv(r, g, b):
@@ -304,53 +419,6 @@ def color_matches(color_hex, target_hue, target_saturation, tolerance):
         return hue_matches and saturation_matches
     except:
         return False
-
-@app.route('/api/stamps/estimate', methods=['POST'])
-def estimate_stamps():
-    try:
-        search_params = request.json
-        connection = get_db_connection()
-        cursor = connection.cursor(dictionary=True)
-
-        # Initialize conditions and parameters for the query
-        conditions = ["1=1"]
-        params = []
-
-        # Add search conditions (same as in search_stamps)
-        if search_params.get('country'):
-            conditions.append("st.country LIKE %s")
-            params.append(f"%{search_params['country']}%")
-
-        if search_params.get('year_from'):
-            conditions.append("st.year >= %s")
-            params.append(search_params['year_from'])
-
-        if search_params.get('year_to'):
-            conditions.append("st.year <= %s")
-            params.append(search_params['year_to'])
-
-        # Quick count query using only essential joins
-        count_query = f"""
-            SELECT COUNT(*) as total 
-            FROM sets st
-            INNER JOIN stamps s ON s.set_id = st.set_id
-            WHERE {' AND '.join(conditions)}
-            AND s.themes IS NOT NULL
-            AND s.themes != '[]'
-        """
-        
-        cursor.execute(count_query, params)
-        total_count = cursor.fetchone()['total']
-
-        cursor.close()
-        connection.close()
-
-        return jsonify({
-            'estimated_count': total_count
-        })
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
