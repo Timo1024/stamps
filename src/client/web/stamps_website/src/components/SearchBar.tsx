@@ -52,6 +52,7 @@ interface SearchPayload {
   saturation?: number;
   tolerance?: number;
   max_results: number;
+  show_owned?: boolean;
 }
 
 interface SearchBarProps {
@@ -222,6 +223,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, currentUser }) =
 
     // Handle username for owned stamps
     if (searchParams.show_owned) {
+      payload.show_owned = true;
       payload.username = currentUser;
     }
 
@@ -404,7 +406,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, currentUser }) =
               autoCorrect="off"
               spellCheck="false"
               onKeyDown={(e) => {
-                if (!/\d/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
+                if (!/\d/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', ".", ","].includes(e.key)) {
                   e.preventDefault();
                 }
               }}

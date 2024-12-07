@@ -8,58 +8,58 @@ import HuePicker from './components/HuePicker';
 import Auth from './components/Auth';
 
 interface Stamp {
-  // added_at: string;
-  amount_letter_fdc: number | null;
-  amount_unused: number | null;
-  amount_used: number;
-  // amount_minted: number | null;
-  category: string;
-  // color: string;
-  color_palette: string;
+  // Sets table fields
+  set_id: number;
   country: string;
-  date_of_issue: string;
-  denomination: string;
-  description: string;
-  // designed: string;
-  // engraved: string;
-  height: number | null;
-  height_width: string | null;
-  // image_accuracy: number;
-  image_path: string;
-  letter_fdc: number | null;
-  letter_fdc_float: number | null;
-  mint_condition: string;
-  mint_condition_float: number;
-  // name: string;
-  // note: string | null;
-  number: string;
-  number_issued: number;
-  perforation_horizontal: number;
-  perforation_keyword: string;
-  perforation_vertical: number;
-  perforations: string;
-  // set_description: string;
+  category: string;
+  year: number;
+  url: string | null;
   set_name: string;
-  // set_id: number;
-  sheet_size: string;
+  set_description: string | null;
+
+  // Stamps table fields
+  stamp_id: number;
+  denomination: number;
+  color: string;
+  description: string | null;
+  stamps_issued: number | null;
+  mint_condition: boolean | null;
+  unused: boolean | null;
+  used: boolean | null;
+  letter_fdc: boolean | null;
+  date_of_issue: string | null;
+  perforations: string | null;
+  sheet_size: string | null;
+  designed: string | null;
+  engraved: string | null;
+  height_width: string | null;
+  themes: string | null;
+  perforation_horizontal: number | null;
+  perforation_vertical: number | null;
+  perforation_keyword: string | null;
+  value_from: number | null;
+  value_to: number | null;
+  number_issued: number | null;
+  mint_condition_float: number | null;
+  unused_float: number | null;
+  used_float: number | null;
+  letter_fdc_float: number | null;
   sheet_size_amount: number | null;
-  // sheet_size_note: string | null;
   sheet_size_x: number | null;
   sheet_size_y: number | null;
-  stamp_id: number;
-  // stamps_issued: string;
-  // themes: string;
-  type: string;
-  unused: number | null;
-  unused_float: number | null;
-  // url: string;
-  used: string;
-  used_float: number;
-  // user_id: number;
-  value_from: number;
-  value_to: number;
+  sheet_size_note: string | null;
+  height: number | null;
   width: number | null;
-  year: number;
+  image_path: string | null;
+  color_palette: string | null;
+
+  // User stamps fields
+  amount_used: number | null;
+  amount_unused: number | null;
+  amount_minted: number | null;
+  amount_letter_fdc: number | null;
+  note: string | null;
+  added_at: string | null;
 }
 
 interface SearchPayload {

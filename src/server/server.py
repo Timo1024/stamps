@@ -218,15 +218,76 @@ def search_stamps():
 
         # Build the base query
         query = """
-            SELECT s.stamp_id, s.number, s.type, s.denomination, s.color, 
-                   s.description, s.themes, s.image_path, s.color_palette,
-                   s.value_from, s.value_to,
-                   st.country, st.year, st.name as set_name, st.set_description
+            SELECT 
+                -- Sets table fields
+                st.set_id,
+                st.country,
+                st.category,
+                st.year,
+                st.url,
+                st.name AS set_name,
+                st.set_description,
+                
+                -- Stamps table fields
+                s.stamp_id,
+                s.denomination,
+                s.color,
+                s.description,
+                s.stamps_issued,
+                s.mint_condition,
+                s.unused,
+                s.used,
+                s.letter_fdc,
+                s.date_of_issue,
+                s.perforations,
+                s.sheet_size,
+                s.designed,
+                s.engraved,
+                s.height_width,
+                s.themes,
+                s.perforation_horizontal,
+                s.perforation_vertical,
+                s.perforation_keyword,
+                s.value_from,
+                s.value_to,
+                s.number_issued,
+                s.mint_condition_float,
+                s.unused_float,
+                s.used_float,
+                s.letter_fdc_float,
+                s.sheet_size_amount,
+                s.sheet_size_x,
+                s.sheet_size_y,
+                s.sheet_size_note,
+                s.height,
+                s.width,
+                s.image_path,
+                s.color_palette,
+                
+                -- User stamps fields
+                us.amount_used,
+                us.amount_unused,
+                us.amount_minted,
+                us.amount_letter_fdc,
+                us.note,
+                us.added_at
             FROM stamps s
             JOIN sets st ON s.set_id = st.set_id
+            LEFT JOIN users u ON u.username = %s
+            LEFT JOIN user_stamps us ON s.stamp_id = us.stamp_id AND us.user_id = u.user_id
             WHERE 1=1
         """
-        params = []
+        # Add username as the first parameter
+        params = [search_params.get('username', '')]
+
+        # If 'show_owned' is True, add condition to filter only owned stamps
+        if search_params.get('show_owned'):
+            query += """
+                AND (us.amount_used > 0 OR 
+                     us.amount_unused > 0 OR 
+                     us.amount_minted > 0 OR 
+                     us.amount_letter_fdc > 0)
+            """
 
         # Add conditions for non-username filters
         if search_params.get('country'):
@@ -286,18 +347,6 @@ def search_stamps():
 
         # Add themes filter
         query += " AND (s.themes IS NOT NULL AND s.themes != '[]')"
-
-        # Add username filter if provided
-        if search_params.get('username'):
-            query += """
-                AND s.stamp_id IN (
-                    SELECT stamp_id 
-                    FROM user_stamps us 
-                    JOIN users u ON us.user_id = u.user_id 
-                    WHERE u.username = %s
-                )
-            """
-            params.append(search_params['username'])
 
         # Add ordering and limit
         query += " ORDER BY st.year DESC, s.stamp_id DESC LIMIT 1000"
