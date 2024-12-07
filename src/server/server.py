@@ -315,8 +315,12 @@ def search_stamps():
         if search_params.get('denomination'):
             try:
                 denomination = float(search_params['denomination'])
+                # print(f"Searching for denomination: {denomination}")
+                # Use a range-based approach to handle floating-point imprecision
                 query += " AND (s.value_from <= %s AND s.value_to >= %s)"
-                params.extend([denomination, denomination])
+                # Add a small tolerance to handle floating-point comparison
+                params.extend([denomination + 0.001, denomination - 0.001])
+                # print(f"Denomination range: {denomination - 0.001} to {denomination + 0.001}")
             except ValueError:
                 print(f"Invalid denomination: {search_params['denomination']}")
 
@@ -356,19 +360,19 @@ def search_stamps():
         cursor = connection.cursor(dictionary=True)
         
         # Debug logging
-        print("Search Query:", query)
-        print("Search Params:", search_params)
-        print("Query Params:", params)
+        # print("Search Query:", query)
+        # print("Search Params:", search_params)
+        # print("Query Params:", params)
         
         cursor.execute(query, params)
         results = cursor.fetchall()
         
         # Print additional debug information
-        print(f"Total results: {len(results)}")
-        if len(results) > 0:
-            print("Sample results:")
-            for result in results[:5]:  # Print first 5 results
-                print(f"Stamp ID: {result['stamp_id']}, Country: {result['country']}, Year: {result['year']}, Set Name: {result['set_name']}")
+        # print(f"Total results: {len(results)}")
+        # if len(results) > 0:
+        #     print("Sample results:")
+        #     for result in results[:5]:  # Print first 5 results
+        #         print(f"Stamp ID: {result['stamp_id']}, Country: {result['country']}, Year: {result['year']}, Set Name: {result['set_name']}")
 
         cursor.close()
         connection.close()
