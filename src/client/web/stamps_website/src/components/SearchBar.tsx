@@ -458,6 +458,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             maxHeight: showAdvancedOptions ? '1000px' : '0',
             overflow: 'hidden',
             transition: 'max-height 0.3s ease-in-out',
+            width: '100%',
           }}>
             <div className="advanced-options-content">
               <div className="single-input">
