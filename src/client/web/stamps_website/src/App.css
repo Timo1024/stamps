@@ -253,7 +253,7 @@ body::-webkit-scrollbar-thumb:hover {
 .main-container {
   display: flex;
   height: calc(100vh - 4rem);
-  margin-top: 4rem;
+  margin-top: 0rem;
 }
 
 .select-group {

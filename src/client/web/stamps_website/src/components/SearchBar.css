@@ -108,7 +108,7 @@ select:focus {
 } */
 
 .search-bar {
-  padding-top: 1rem;
+  padding-top: 0.3rem;
   /* background-color: #222626; */
   /* border-radius: 5px; */
   /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); */
