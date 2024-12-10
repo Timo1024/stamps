@@ -2,5 +2,8 @@
     "editor.formatOnType": true,
     "[commonlisp]": {
         "editor.wordSeparators": "`|;:'\",()"
-    }
+    },
+    "git.autofetch": false, 
+    "git.decorations.enabled": false,
+    "git.untrackedChanges": "hidden"
 }

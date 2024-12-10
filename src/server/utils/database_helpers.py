@@ -6,8 +6,8 @@ def get_db_connection():
     with open("../crawling/tokens.json") as f:
         passwords = json.load(f)
 
-    # pwd=passwords["mysql_password_laptop"]
-    pwd=passwords["mysql_password"]
+    pwd=passwords["mysql_password_laptop"]
+    # pwd=passwords["mysql_password"]
 
     # Connect to MySQL
     connection = mysql.connector.connect(
