@@ -75,7 +75,7 @@ body::-webkit-scrollbar-thumb:hover {
 
 .stamps-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 1rem;
   /* padding: 1rem; */
   width: 100%;
@@ -91,7 +91,7 @@ body::-webkit-scrollbar-thumb:hover {
   justify-content: center;
 }
 
-.stamp-card {
+/* .stamp-card {
   background-color: #222626;
   border-radius: 5px;
   padding: 1rem;
@@ -105,13 +105,13 @@ body::-webkit-scrollbar-thumb:hover {
   position: relative;
   min-height: 250px;
   max-width: 200px;
-}
+} */
 
-.stamp-card:hover {
+/* .stamp-card:hover {
   box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.2);
-}
+} */
 
-.stamp-image-container {
+/* .stamp-image-container {
   width: 8rem;
   height: 8rem;
   display: flex;
@@ -119,77 +119,13 @@ body::-webkit-scrollbar-thumb:hover {
   justify-content: center;
   box-sizing: border-box;
   margin-bottom: 1rem;
-}
+} */
 
-.stamp-image {
+/* .stamp-image {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-}
-
-.no-image {
-  /* position: absolute; */
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #666;
-  font-style: italic;
-}
-
-.stamp-info {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 2rem;
-}
-
-.stamp-text {
-  flex-grow: 1;
-}
-
-.stamp-country {
-  font-size: 1.1rem;
-  font-weight: bold;
-  color: #ffffff;
-  margin-bottom: 0.5rem;
-}
-
-.stamp-name {
-  font-size: 0.9rem;
-  color: #cccccc;
-}
-
-.color-palette {
-  position: absolute;
-  left: 7px;
-  bottom: 7px;
-  display: flex;
-  flex-direction: row;
-  height: 12px;
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 3px;
-  overflow: hidden;
-  z-index: 1;
-}
-
-.color-box {
-  width: 12px;
-  height: 12px;
-}
-
-.color-box:first-child {
-  border-top-left-radius: 3px;
-  border-bottom-left-radius: 3px;
-}
-
-.color-box:last-child {
-  border-top-right-radius: 3px;
-  border-bottom-right-radius: 3px;
-}
+} */
 
 .title {
   display: flex;

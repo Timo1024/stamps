@@ -7,12 +7,24 @@ interface StampCardProps {
   name: string;
   imageLink: string | null;
   colorPalette: string | null;
+  denomination: number | null;
+  year: number;
+  themes: string | null;
 }
 
-const StampCard: React.FC<StampCardProps> = ({ country, name, imageLink, colorPalette }) => {
+const StampCard: React.FC<StampCardProps> = ({
+  country,
+  name,
+  imageLink,
+  colorPalette,
+  denomination,
+  year,
+  themes,
+}) => {
   const [colors, setColors] = useState<string[]>([]);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [isInView, setIsInView] = useState(false);
+  const [themeList, setThemeList] = useState<string[]>([]);
 
   useEffect(() => {
     if (colorPalette) {
@@ -26,6 +38,26 @@ const StampCard: React.FC<StampCardProps> = ({ country, name, imageLink, colorPa
       }
     }
   }, [colorPalette]);
+
+  useEffect(() => {
+    if (themes) {
+      try {
+        const parsedThemes = JSON.parse(themes.replace(/'/g, '"'));
+        console.log(parsedThemes);
+        
+        // split each element at / at just kee unique values
+        const uniqueThemes : Set<string> = new Set(parsedThemes.flatMap((theme: string) => theme.split('/')));
+        // set to array
+        const uniqueThemesArray : string[] = Array.from(uniqueThemes);
+        
+        console.log(uniqueThemesArray);
+        
+        setThemeList(uniqueThemesArray);
+      } catch (error) {
+        console.error('Error parsing themes:', error);
+      }
+    }
+  }, [themes]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -73,6 +105,27 @@ const StampCard: React.FC<StampCardProps> = ({ country, name, imageLink, colorPa
       <div className="stamp-info">
         <div className="stamp-country">{country}</div>
         <div className="stamp-name">{name}</div>
+        <div className='stamp-detail-wrapper-two'>
+          <div className="stamp-detail-wrapper">
+            <div className="stamp-detail-label">Denomination:</div>
+            <div className="stamp-denomination">{denomination}</div>
+          </div>
+          <div className='stamp-detail-wrapper'>
+            <div className="stamp-detail-label">Year:</div>
+            <div className="stamp-year">{year}</div>
+          </div>
+        </div>
+        <div className="stamp-themes-wrapper-long">
+          <div className="stamp-detail-label">Themes:</div>
+          {themeList.length > 0 && (
+            <div className="stamp-themes">
+              {themeList.join(', ')}
+            </div>
+          )}
+          {themeList.length === 0 && (
+            <div className="stamp-themes">-</div>
+          )}
+        </div>
       </div>
       {colors.length > 0 && (
         <div className="color-palette">

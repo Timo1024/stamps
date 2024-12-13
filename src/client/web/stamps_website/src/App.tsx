@@ -19,7 +19,7 @@ interface Stamp {
 
   // Stamps table fields
   stamp_id: number;
-  denomination: number;
+  denomination: number | null;
   color: string;
   description: string | null;
   stamps_issued: number | null;
@@ -233,6 +233,9 @@ function App() {
                           name={stamp.set_name}
                           imageLink={stamp.image_path ? stamp.image_path.replace('./images_all_2/', '') : null}
                           colorPalette={stamp.color_palette}
+                          denomination={stamp.denomination}
+                          year={stamp.year}
+                          themes={stamp.themes}
                         />
                       </div>
                     ))}
