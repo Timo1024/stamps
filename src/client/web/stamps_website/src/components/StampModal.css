@@ -86,10 +86,21 @@
     transform: rotate(90deg);
 }
 
+.stamp-details-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 20px;
+}
+
+.save-button,
 .edit-button {
   position: absolute;
-  top: 20px;
-  right: 60px;
+  top: -20px;
+  right: 10px;
   background: none;
   border: none;
   cursor: pointer;
@@ -98,6 +109,7 @@
   padding: 20px;
 }
 
+.save-button svg,
 .edit-button svg {
   width: 16px;
   height: 16px;
@@ -105,12 +117,12 @@
   transition: all 0.3s ease;
 }
 
+.save-button:hover svg,
 .edit-button:hover svg {
   fill: #2edfdf;
 }
 
-.save-button {
-  position: absolute;
+/* .save-button {
   top: 20px;
   right: 100px;
   background: #08a8a8;
@@ -125,7 +137,7 @@
 
 .save-button:hover {
   background-color: #2edfdf;
-}
+} */
 
 .stamp-modal-content {
   display: flex;
