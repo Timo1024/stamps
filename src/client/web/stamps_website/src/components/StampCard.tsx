@@ -10,6 +10,7 @@ interface StampCardProps {
   denomination: number | null;
   year: number;
   themes: string | null;
+  onClick?: () => void;
 }
 
 const StampCard: React.FC<StampCardProps> = ({
@@ -20,11 +21,13 @@ const StampCard: React.FC<StampCardProps> = ({
   denomination,
   year,
   themes,
+  onClick,
 }) => {
   const [colors, setColors] = useState<string[]>([]);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [isInView, setIsInView] = useState(false);
   const [themeList, setThemeList] = useState<string[]>([]);
+  const [isClicked, setIsClicked] = useState(false);
 
   useEffect(() => {
     if (colorPalette) {
@@ -82,8 +85,17 @@ const StampCard: React.FC<StampCardProps> = ({
     setIsImageLoaded(true);
   };
 
+  const handleCardClick = () => {
+    setIsClicked(true);
+    if (onClick) onClick();
+  };
+
   return (
-    <div id={`stamp-${name}-${country}`} className="stamp-card">
+    <div
+      id={`stamp-${name}-${country}`}
+      className={`stamp-card ${isClicked ? 'clicked' : ''}`}
+      onClick={handleCardClick}
+    >
       <div className="stamp-image-container">
         {isInView && imageLink && (
           <>

@@ -6,6 +6,7 @@ import StampCard from './components/StampCard';
 import SearchBar from './components/SearchBar';
 import HuePicker from './components/HuePicker';
 import Auth from './components/Auth';
+import StampModal from './components/StampModal';
 
 interface Stamp {
   // Sets table fields
@@ -112,10 +113,34 @@ function App() {
   const [page, setPage] = useState(0);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<string | null>(null);
+  const [selectedStamp, setSelectedStamp] = useState<Stamp | null>(null);
 
   const handleAuthSuccess = (username: string) => {
     setIsAuthenticated(true);
     setCurrentUser(username);
+  };
+
+  const handleStampClick = (stamp: Stamp) => {
+    setSelectedStamp(stamp);
+  };
+
+  const handleModalClose = () => {
+    setSelectedStamp(null);
+    setTimeout(() => {
+      const clickedCard = document.querySelector('.stamp-card.clicked');
+      if (clickedCard) {
+        clickedCard.classList.remove('clicked');
+      }
+    }, 300); // Match the duration of the CSS transition
+  };
+
+  const handleSaveStamp = (updatedStamp: Stamp) => {
+    // Update the stamp in the allStamps array
+    setAllStamps((prevStamps) =>
+      prevStamps.map((stamp) =>
+        stamp.stamp_id === updatedStamp.stamp_id ? updatedStamp : stamp
+      )
+    );
   };
 
   // Intersection Observer for infinite scroll
@@ -236,6 +261,7 @@ function App() {
                           denomination={stamp.denomination}
                           year={stamp.year}
                           themes={stamp.themes}
+                          onClick={() => handleStampClick(stamp)}
                         />
                       </div>
                     ))}
@@ -255,6 +281,13 @@ function App() {
               )}
             </div>
           </div>
+          {selectedStamp && (
+            <StampModal
+              stamp={selectedStamp}
+              onClose={handleModalClose}
+              onSave={handleSaveStamp}
+            />
+          )}
         </div>
       )}
     </div>

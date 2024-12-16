@@ -190,6 +190,8 @@ body::-webkit-scrollbar-thumb:hover {
   display: flex;
   height: calc(100vh - 4rem);
   margin-top: 0rem;
+  position: relative; /* Ensure it doesn't interfere with the modal */
+  z-index: 1; /* Lower z-index than the modal */
 }
 
 .select-group {
