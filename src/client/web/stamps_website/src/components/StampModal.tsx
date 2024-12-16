@@ -12,8 +12,10 @@ const StampModal: React.FC<StampModalProps> = ({ stamp, onClose, onSave }) => {
     const [note, setNote] = useState(stamp.note || '');
     const [image, setImage] = useState<File | null>(null);
     const [isVisible, setIsVisible] = useState(false);
+    const [isImageLoaded, setIsImageLoaded] = useState(false);
     const modalRef = useRef<HTMLDivElement>(null);
     const [stampDetails, setStampDetails] = useState<{ [key: string]: string }>({});
+    const [stampValuesAndOwnership, setStampValuesAndOwnership] = useState<{ [key: string]: [string | null, number | null, number | null] }>({});
 
     useEffect(() => {
         setIsVisible(true);
@@ -65,9 +67,6 @@ const StampModal: React.FC<StampModalProps> = ({ stamp, onClose, onSave }) => {
             dateOfIssue = new Date(stamp.date_of_issue).toLocaleDateString();
         }
 
-
-
-
         //   create dict with all values needed in the stamp-details div
         const stampDetails = {
             "Country": stamp.country ? stamp.country : "-",
@@ -83,11 +82,19 @@ const StampModal: React.FC<StampModalProps> = ({ stamp, onClose, onSave }) => {
             "Size": stamp.height_width ? stamp.height_width : "-",
             "Number Issued": stamp.number_issued ? stamp.number_issued : "-",
             "Perforation": stamp.perforations ? stamp.perforations : "-",
-            "Sheet Size": stamp.sheet_size ? stamp.sheet_size : "-",
-            "Stamps Issued": stamp.stamps_issued ? stamp.stamps_issued : "-"
+            "Sheet Size": stamp.sheet_size ? stamp.sheet_size : "-" //,
+            // "Stamps Issued": stamp.stamps_issued ? stamp.stamps_issued : "-"
+        };
+
+        const stampValuesAndOwnership : { [key: string]: [string | null, number | null, number | null] } = {
+            "Mint": [stamp.mint_condition ? stamp.mint_condition : "-", stamp.amount_minted ? stamp.amount_minted : 0, stamp.mint_condition_float ? stamp.mint_condition_float : 0],
+            "Unused": [stamp.unused ? stamp.unused : "-", stamp.amount_unused ? stamp.amount_unused : 0, stamp.unused_float ? stamp.unused_float : 0],
+            "Used": [stamp.used ? stamp.used : "-", stamp.amount_used ? stamp.amount_used : 0, stamp.used_float ? stamp.used_float : 0],
+            "Letter/FDC": [stamp.letter_fdc ? stamp.letter_fdc : "-", stamp.amount_letter_fdc ? stamp.amount_letter_fdc : 0, stamp.letter_fdc_float ? stamp.letter_fdc_float : 0]
         };
 
         setStampDetails(stampDetails);
+        setStampValuesAndOwnership(stampValuesAndOwnership);
 
     }, [stamp]);
 
@@ -110,6 +117,16 @@ const StampModal: React.FC<StampModalProps> = ({ stamp, onClose, onSave }) => {
         setTimeout(onClose, 300); // Match the duration of the CSS transition
     };
 
+    const handleImageLoad = () => {
+        setIsImageLoaded(true);
+    };
+
+    const calculateTotalValue = () => {
+        return Object.values(stampValuesAndOwnership).reduce((total, [_, amount, value]) => {
+            return total + (amount || 0) * (value || 0);
+        }, 0);
+    };
+
     return (
         <div className={`stamp-modal-overlay ${isVisible ? 'visible' : ''}`}>
             <div className="stamp-modal" ref={modalRef}>
@@ -120,7 +137,14 @@ const StampModal: React.FC<StampModalProps> = ({ stamp, onClose, onSave }) => {
                 </button>
                 <div className="stamp-modal-content">
                     <h2>{stamp.set_name}</h2>
-                    <img src={`http://localhost:5000/images/${stamp.image_path.replace('./images_all_2/', '')}`} alt={stamp.set_name} />
+                    <div className="stamp-modal-image-container">
+                        <img
+                            src={`http://localhost:5000/images/${stamp.image_path.replace('./images_all_2/', '')}`}
+                            alt={stamp.set_name}
+                            className={`stamp-modal-image ${isImageLoaded ? 'loaded' : ''}`}
+                            onLoad={handleImageLoad}
+                        />
+                    </div>
                     <div className="stamp-details">
                         {Object.keys(stampDetails).map((key) => (
                             <div key={key} className="stamp-detail">
@@ -128,6 +152,38 @@ const StampModal: React.FC<StampModalProps> = ({ stamp, onClose, onSave }) => {
                                 <div className="stamp-detail-value">{stampDetails[key]}</div>
                             </div>
                         ))}
+                    </div>
+                    <div className="stamp-values-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Value</th>
+                                    <th>Owned</th>
+                                    <th>Total Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {Object.keys(stampValuesAndOwnership).map((key) => {
+                                    const [value, amount, valueFloat] = stampValuesAndOwnership[key];
+                                    const totalValue = (amount || 0) * (valueFloat || 0);
+                                    return (
+                                        <tr key={key}>
+                                            <td>{key}</td>
+                                            <td>{value}</td>
+                                            <td>{amount}</td>
+                                            <td>{totalValue.toFixed(2)}</td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colSpan={3}>Total</td>
+                                    <td>{calculateTotalValue().toFixed(2)}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
                     </div>
                 </div>
             </div>
