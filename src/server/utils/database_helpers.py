@@ -14,7 +14,8 @@ def get_db_connection():
         host='localhost',
         user='root',
         password=pwd,
-        database='stampcollection'
+        database='stampcollection_testing'
+        # database='stampcollection'
     )
 
     return connection

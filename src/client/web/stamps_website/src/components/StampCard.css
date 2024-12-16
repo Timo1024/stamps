@@ -21,10 +21,10 @@
     border-color: #ced4da;
 }
 
-.stamp-card.clicked {
+/* .stamp-card.clicked {
   transform: scale(1.1);
   transition: transform 0.3s ease-in-out;
-}
+} */
 
 .stamp-detail-wrapper-two {
     display: flex;

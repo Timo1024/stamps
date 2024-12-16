@@ -89,6 +89,7 @@ body::-webkit-scrollbar-thumb:hover {
   height: 100%;
   display: flex;
   justify-content: center;
+  cursor: pointer;
 }
 
 /* .stamp-card {
