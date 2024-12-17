@@ -311,6 +311,38 @@
     border-radius: 0 4px 4px 0;
 }
 
+/* stamp upload button */
+/* .upload-button-container {
+    background-color: #08a8a8;
+    color: white;
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+} 
+
+.upload-button-container:hover {
+    background-color: #2edfdf;
+} */
+
+.upload-button {
+    background-color: #0b7676;
+    color: #fff;
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.upload-button:hover {
+    background-color: #2ab8b8;
+}
+
+
 /* .stamp-details p {
   margin: 5px 0;
 } */

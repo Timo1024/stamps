@@ -167,6 +167,13 @@ const StampModal: React.FC<StampModalProps> = ({ stamp, onClose, onSave }) => {
         }));
       };
 
+    const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.files && event.target.files[0]) {
+          setImage(event.target.files[0]);
+          // Handle the image upload logic here
+        }
+      };
+
     return (
         <div className={`stamp-modal-overlay ${isVisible ? 'visible' : ''}`}>
             <div className="stamp-modal" ref={modalRef}>
@@ -178,12 +185,27 @@ const StampModal: React.FC<StampModalProps> = ({ stamp, onClose, onSave }) => {
                 <div className="stamp-modal-content">
                     <h2>{stamp.set_name}</h2>
                     <div className="stamp-modal-image-container">
-                        <img
-                            src={`http://localhost:5000/images/${stamp.image_path.replace('./images_all_2/', '')}`}
-                            alt={stamp.set_name}
-                            className={`stamp-modal-image ${isImageLoaded ? 'loaded' : ''}`}
-                            onLoad={handleImageLoad}
-                        />
+                        {stamp.image_path ? (
+                            <img
+                                src={`http://localhost:5000/images/${stamp.image_path.replace('./images_all_2/', '')}`}
+                                alt={stamp.set_name}
+                                className={`stamp-modal-image ${isImageLoaded ? 'loaded' : ''}`}
+                                onLoad={handleImageLoad}
+                            />
+                        ) : (
+                            <div className="upload-button-container">
+                                <input
+                                    type="file"
+                                    id="image-upload"
+                                    accept="image/*"
+                                    onChange={handleImageUpload}
+                                    style={{ display: 'none' }}
+                                />
+                                <label htmlFor="image-upload" className="upload-button">
+                                    Upload Image
+                                </label>
+                            </div>
+                        )}
                     </div>
                     {/* make horizontal line */}
                     <hr className="modal-line" />
