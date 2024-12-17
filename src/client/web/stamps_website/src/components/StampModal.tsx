@@ -145,6 +145,28 @@ const StampModal: React.FC<StampModalProps> = ({ stamp, onClose, onSave }) => {
         }));
     };
 
+    const handleIncrement = (key: string) => {
+        setStampValuesAndOwnership((prevValues) => ({
+          ...prevValues,
+          [key]: [
+            prevValues[key][0],
+            (prevValues[key][1] || 0) + 1,
+            prevValues[key][2]
+          ]
+        }));
+      };
+    
+      const handleDecrement = (key: string) => {
+        setStampValuesAndOwnership((prevValues) => ({
+          ...prevValues,
+          [key]: [
+            prevValues[key][0],
+            Math.max((prevValues[key][1] || 0) - 1, 0),
+            prevValues[key][2]
+          ]
+        }));
+      };
+
     return (
         <div className={`stamp-modal-overlay ${isVisible ? 'visible' : ''}`}>
             <div className="stamp-modal" ref={modalRef}>
@@ -207,6 +229,7 @@ const StampModal: React.FC<StampModalProps> = ({ stamp, onClose, onSave }) => {
                                     <th>Value</th>
                                     <th>Owned</th>
                                     <th>Total Value</th>
+                                    <th>Adjust</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -219,6 +242,12 @@ const StampModal: React.FC<StampModalProps> = ({ stamp, onClose, onSave }) => {
                                             <td>{value}</td>
                                             <td>{amount}</td>
                                             <td>{totalValue.toFixed(2)}</td>
+                                            <td>
+                                                <div className="adjust-ownership">
+                                                    <button className="decrement-button" onClick={() => handleDecrement(key)}>-</button>
+                                                    <button className="increment-button" onClick={() => handleIncrement(key)}>+</button>
+                                                </div>
+                                            </td>
                                         </tr>
                                     );
                                 })}

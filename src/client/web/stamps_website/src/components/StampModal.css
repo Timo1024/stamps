@@ -277,6 +277,40 @@
   font-weight: bold;
 }
 
+.adjust-ownership {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 3px;
+    
+}
+
+.increment-button,
+.decrement-button {
+    color: #fff;
+    background: #181b1b;
+    border: none;
+    cursor: pointer;
+    transition: all 0.5s ease;
+    padding: 5px;
+    width: 40px;
+}
+
+.increment-button:hover,
+.decrement-button:hover {
+    color: #000;
+    background: #2edfdf;
+}
+
+.decrement-button {
+    border-radius: 4px 0 0 4px;
+}
+
+.increment-button {
+    border-radius: 0 4px 4px 0;
+}
+
 /* .stamp-details p {
   margin: 5px 0;
 } */
