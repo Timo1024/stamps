@@ -14,7 +14,8 @@ const StampModal: React.FC<StampModalProps> = ({ stamp, onClose, onSave }) => {
     const [isVisible, setIsVisible] = useState(false);
     const [isImageLoaded, setIsImageLoaded] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
-    const [relatedImages, setRelatedImages] = useState<{ [id: number]: string }>([]);
+    const [relatedImages, setRelatedImages] = useState<{ [id: number]: string }>({});
+    const [loading, setLoading] = useState(true);
     const modalRef = useRef<HTMLDivElement>(null);
     const [stampDetails, setStampDetails] = useState<{ [key: string]: string }>({});
     const [stampValuesAndOwnership, setStampValuesAndOwnership] = useState<{ [key: string]: [string | null, number | null, number | null] }>({});
@@ -44,6 +45,8 @@ const StampModal: React.FC<StampModalProps> = ({ stamp, onClose, onSave }) => {
                 setRelatedImages(imageUrlsDict);
             } catch (error) {
                 console.error('Error fetching related images:', error);
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -313,22 +316,26 @@ const StampModal: React.FC<StampModalProps> = ({ stamp, onClose, onSave }) => {
                     </div>
                     <hr className="modal-line" />
                     <div className="related-images">
-                        {Object.values(relatedImages).map((img, index) => (
-                            <div className='related-stamp-container' key={index}>
-                                {img &&
-                                    <img
-                                        key={index}
-                                        src={`http://localhost:5000/images/${img.replace('./images_all_2/', '')}`}
-                                        alt={`Related stamp ${index + 1}`}
-                                        className="related-stamp-image"
-                                    />
-                                }
-                                {/* if no image is available */}
-                                {!img &&
-                                    <div key={ index } className="no-image-modal">No image <br/> available</div>
-                                }
-                            </div>
-                        ))}
+                        {loading ? (
+                            <div className="loading-text">Loading related images...</div>
+                        ) : (
+                            Object.values(relatedImages).map((img, index) => (
+                                <div className='related-stamp-container' key={index}>
+                                    {img &&
+                                        <img
+                                            key={index}
+                                            src={`http://localhost:5000/images/${img.replace('./images_all_2/', '')}`}
+                                            alt={`Related stamp ${index + 1}`}
+                                            className="related-stamp-image"
+                                        />
+                                    }
+                                    {/* if no image is available */}
+                                    {!img &&
+                                        <div key={ index } className="no-image-modal">No image <br/> available</div>
+                                    }
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
             </div>

@@ -8,6 +8,7 @@ import colorsys
 from utils.database_helpers import get_user_id_by_username, get_db_connection
 import bcrypt
 from datetime import datetime
+import time
 
 app = Flask(__name__)
 CORS(app)
@@ -208,6 +209,7 @@ def get_stamp_by_id(stamp_id):
 # get all stamp ids from a set_id
 @app.route('/api/stamps/set/<int:set_id>', methods=['GET'])
 def get_stamp_ids_by_set_id(set_id):
+
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
     query = f"""

@@ -349,7 +349,7 @@
     justify-content: center;
     align-items: center;
     gap: 20px;
-    margin-top: 10px;
+    /* margin-top: 10px; */
 }
 
 .related-stamp-container {
@@ -371,6 +371,15 @@ img.related-stamp-image {
 }
 
 .related-images .no-image-modal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    font-style: italic;
+}
+
+.loading-text {
+    height: 150px;
     display: flex;
     align-items: center;
     justify-content: center;
