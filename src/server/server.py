@@ -92,20 +92,20 @@ def login():
             connection.close()
 
 # Route to fetch stamps based on set_id
-@app.route('/api/stamps/by_set_id/<int:set_id>', methods=['GET'])
-def get_stamps_by_set_id(set_id):
-    connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
-    query = f"""
-        SELECT * FROM stamps
-        WHERE set_id = {set_id}
-    """
-    cursor.execute(query)
-    stamps = cursor.fetchall()
-    cursor.close()
-    connection.close()
+# @app.route('/api/stamps/by_set_id/<int:set_id>', methods=['GET'])
+# def get_stamps_by_set_id(set_id):
+#     connection = get_db_connection()
+#     cursor = connection.cursor(dictionary=True)
+#     query = f"""
+#         SELECT * FROM stamps
+#         WHERE set_id = {set_id}
+#     """
+#     cursor.execute(query)
+#     stamps = cursor.fetchall()
+#     cursor.close()
+#     connection.close()
 
-    return jsonify(stamps)
+#     return jsonify(stamps)
 
 # get stamps by username
 @app.route('/api/stamps/by_username/<string:username>', methods=['GET'])
@@ -186,6 +186,55 @@ def get_themes():
     # Convert set to sorted list
     themes = sorted(list(all_themes))
     return jsonify(themes)
+
+# get all stamp info by id
+@app.route('/api/stamps/<int:stamp_id>', methods=['GET'])
+def get_stamp_by_id(stamp_id):
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    query = f"""
+        SELECT * FROM stamps
+        JOIN sets ON stamps.set_id = sets.set_id
+        WHERE stamps.stamp_id = {stamp_id}
+    """
+    cursor.execute(query)
+    stamp = cursor.fetchone()
+    cursor.close()
+    connection.close()
+
+    return jsonify(stamp)
+
+# get all stamp ids from a set_id
+@app.route('/api/stamps/set/<int:set_id>', methods=['GET'])
+def get_stamp_ids_by_set_id(set_id):
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    query = f"""
+        SELECT stamp_id FROM stamps
+        WHERE set_id = {set_id}
+    """
+    cursor.execute(query)
+    stamps = [stamp['stamp_id'] for stamp in cursor.fetchall()]
+    cursor.close()
+    connection.close()
+
+    return jsonify(stamps)
+
+# serve image by stamp_id
+@app.route('/api/stamps/image/<int:stamp_id>', methods=['GET'])
+def get_image_by_stamp_id(stamp_id):
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    query = f"""
+        SELECT image_path FROM stamps
+        WHERE stamp_id = {stamp_id}
+    """
+    cursor.execute(query)
+    image_path = cursor.fetchone()['image_path']
+    cursor.close()
+    connection.close()
+
+    return send_from_directory('../crawling/images_all_2', image_path)
 
 # search endpoint to handle all search parameters
 @app.route('/api/stamps/search', methods=['POST'])
