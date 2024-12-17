@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, send_from_directory, request
 from flask_cors import CORS
 import mysql.connector
+import os
 import json
 import re
 import colorsys
@@ -212,6 +213,7 @@ def get_stamp_ids_by_set_id(set_id):
     query = f"""
         SELECT stamp_id FROM stamps
         WHERE set_id = {set_id}
+        AND themes IS NOT NULL
     """
     cursor.execute(query)
     stamps = [stamp['stamp_id'] for stamp in cursor.fetchall()]
@@ -220,9 +222,9 @@ def get_stamp_ids_by_set_id(set_id):
 
     return jsonify(stamps)
 
-# serve image by stamp_id
-@app.route('/api/stamps/image/<int:stamp_id>', methods=['GET'])
-def get_image_by_stamp_id(stamp_id):
+# get image link by stamp_id
+@app.route('/api/stamps/get_image_link/<int:stamp_id>', methods=['GET'])
+def get_image_path_by_stamp_id(stamp_id):
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
     query = f"""
@@ -234,7 +236,7 @@ def get_image_by_stamp_id(stamp_id):
     cursor.close()
     connection.close()
 
-    return send_from_directory('../crawling/images_all_2', image_path)
+    return jsonify(image_path)
 
 # search endpoint to handle all search parameters
 @app.route('/api/stamps/search', methods=['POST'])
