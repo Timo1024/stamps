@@ -16,6 +16,7 @@ const StampModal: React.FC<StampModalProps> = ({ stamp, onClose, onSave }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [relatedImages, setRelatedImages] = useState<{ [id: number]: string }>({});
     const [loading, setLoading] = useState(true);
+    const [currentStamp, setCurrentStamp] = useState(stamp);
     const modalRef = useRef<HTMLDivElement>(null);
     const [stampDetails, setStampDetails] = useState<{ [key: string]: string }>({});
     const [stampValuesAndOwnership, setStampValuesAndOwnership] = useState<{ [key: string]: [string | null, number | null, number | null] }>({});
@@ -28,20 +29,16 @@ const StampModal: React.FC<StampModalProps> = ({ stamp, onClose, onSave }) => {
     useEffect(() => {
         const fetchRelatedImages = async () => {
             try {
-                const response = await axios.get(`http://localhost:5000/api/stamps/set/${stamp.set_id}`);
+                const response = await axios.get(`http://localhost:5000/api/stamps/set/${currentStamp.set_id}`);
                 const stampIds = response.data;
-                // get the paths like this
-                // http://localhost:5000/api/stamps/get_image_link/${id}
                 const imageUrls: string[] = await Promise.all(stampIds.map(async (id: number) => {
                     const imageResponse = await axios.get(`http://localhost:5000/api/stamps/get_image_link/${id}`);
                     return imageResponse.data;
-                }
-                ));
+                }));
                 const imageUrlsDict: { [id: number]: string } = stampIds.reduce((acc: { [id: number]: string }, id: number, index: number) => {
                     acc[id] = imageUrls[index];
                     return acc;
                 }, {});
-                console.log(imageUrlsDict);
                 setRelatedImages(imageUrlsDict);
             } catch (error) {
                 console.error('Error fetching related images:', error);
@@ -51,39 +48,27 @@ const StampModal: React.FC<StampModalProps> = ({ stamp, onClose, onSave }) => {
         };
 
         fetchRelatedImages();
-    }, [stamp.set_id]);
+    }, [currentStamp.set_id]);
 
     // prepare data to display
     useEffect(() => {
-
-        console.log(stamp);
-        
-        // themes
         let themes: string = "-";
-        if (stamp.themes) {
-            try {                
-                // Replace single quotes with double quotes and handle nested single quotes
-                const parsedThemes = JSON.parse(stamp.themes.replace(/'/g, '"'));
-
-                // split each element at / and keep unique values
+        if (currentStamp.themes) {
+            try {
+                const parsedThemes = JSON.parse(currentStamp.themes.replace(/'/g, '"'));
                 const uniqueThemes: Set<string> = new Set(parsedThemes.flatMap((theme: string) => theme.split('/')));
-                // set to array
                 const uniqueThemesArray: string[] = Array.from(uniqueThemes);
-
                 themes = uniqueThemesArray.join(', ');
             } catch (error) {
                 console.error('Error parsing themes:', error);
             }
         }
 
-        // the last date the user added this stamp
         let lastAdded: string = "-";
-        if (stamp.added_at) {
-            const lastAddedRaw: string = stamp.added_at;
-            // convert Sat, 07 Dec 2024 15:02:38 GMT to readable date
+        if (currentStamp.added_at) {
+            const lastAddedRaw: string = currentStamp.added_at;
             const date = new Date(lastAddedRaw);
             lastAdded = date.toLocaleDateString();
-            // if the date was today or yesterday, show the time instead
             const today = new Date();
             const yesterday = new Date(today);
             yesterday.setDate(yesterday.getDate() - 1);
@@ -95,41 +80,36 @@ const StampModal: React.FC<StampModalProps> = ({ stamp, onClose, onSave }) => {
         }
 
         let dateOfIssue: string = "-";
-        if (stamp.date_of_issue) {
-            dateOfIssue = new Date(stamp.date_of_issue).toLocaleDateString();
+        if (currentStamp.date_of_issue) {
+            dateOfIssue = new Date(currentStamp.date_of_issue).toLocaleDateString();
         }
 
-        //   create dict with all values needed in the stamp-details div
         const stampDetails = {
-            "Country": stamp.country ? stamp.country : "-",
-            "Year": stamp.year ? stamp.year : "-",
-            "Denomination": stamp.denomination ? stamp.denomination : "-",
+            "Country": currentStamp.country ? currentStamp.country : "-",
+            "Year": currentStamp.year ? currentStamp.year : "-",
+            "Denomination": currentStamp.denomination ? currentStamp.denomination : "-",
             "Themes": themes,
-            // "Last added": lastAdded,
-            "Category": stamp.category ? stamp.category : "-",
-            "Color": stamp.color ? stamp.color : "-",
+            "Category": currentStamp.category ? currentStamp.category : "-",
+            "Color": currentStamp.color ? currentStamp.color : "-",
             "Date of Issue": dateOfIssue,
-            "Designed by": stamp.designed ? stamp.designed : "-",
-            "Engraved by": stamp.engraved ? stamp.engraved : "-",
-            "Size": stamp.height_width ? stamp.height_width : "-",
-            "Number Issued": stamp.number_issued ? stamp.number_issued : "-",
-            "Perforation": stamp.perforations ? stamp.perforations : "-",
-            "Sheet Size": stamp.sheet_size ? stamp.sheet_size : "-" //,
-            // "Stamps Issued": stamp.stamps_issued ? stamp.stamps_issued : "-"
+            "Designed by": currentStamp.designed ? currentStamp.designed : "-",
+            "Engraved by": currentStamp.engraved ? currentStamp.engraved : "-",
+            "Size": currentStamp.height_width ? currentStamp.height_width : "-",
+            "Number Issued": currentStamp.number_issued ? currentStamp.number_issued : "-",
+            "Perforation": currentStamp.perforations ? currentStamp.perforations : "-",
+            "Sheet Size": currentStamp.sheet_size ? currentStamp.sheet_size : "-"
         };
 
-        const stampValuesAndOwnership : { [key: string]: [string | null, number | null, number | null] } = {
-            "Mint": [stamp.mint_condition ? stamp.mint_condition : "-", stamp.amount_minted ? stamp.amount_minted : 0, stamp.mint_condition_float ? stamp.mint_condition_float : 0],
-            "Unused": [stamp.unused ? stamp.unused : "-", stamp.amount_unused ? stamp.amount_unused : 0, stamp.unused_float ? stamp.unused_float : 0],
-            "Used": [stamp.used ? stamp.used : "-", stamp.amount_used ? stamp.amount_used : 0, stamp.used_float ? stamp.used_float : 0],
-            "Letter/FDC": [stamp.letter_fdc ? stamp.letter_fdc : "-", stamp.amount_letter_fdc ? stamp.amount_letter_fdc : 0, stamp.letter_fdc_float ? stamp.letter_fdc_float : 0]
+        const stampValuesAndOwnership: { [key: string]: [string | null, number | null, number | null] } = {
+            "Mint": [currentStamp.mint_condition ? currentStamp.mint_condition : "-", currentStamp.amount_minted ? currentStamp.amount_minted : 0, currentStamp.mint_condition_float ? currentStamp.mint_condition_float : 0],
+            "Unused": [currentStamp.unused ? currentStamp.unused : "-", currentStamp.amount_unused ? currentStamp.amount_unused : 0, currentStamp.unused_float ? currentStamp.unused_float : 0],
+            "Used": [currentStamp.used ? currentStamp.used : "-", currentStamp.amount_used ? currentStamp.amount_used : 0, currentStamp.used_float ? currentStamp.used_float : 0],
+            "Letter/FDC": [currentStamp.letter_fdc ? currentStamp.letter_fdc : "-", currentStamp.amount_letter_fdc ? currentStamp.amount_letter_fdc : 0, currentStamp.letter_fdc_float ? currentStamp.letter_fdc_float : 0]
         };
 
         setStampDetails(stampDetails);
         setStampValuesAndOwnership(stampValuesAndOwnership);
-
-    }, [stamp]);
-
+    }, [currentStamp]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -166,7 +146,7 @@ const StampModal: React.FC<StampModalProps> = ({ stamp, onClose, onSave }) => {
     const handleSaveClick = () => {
         setIsEditing(false);
         // Save the updated stamp details
-        onSave({ ...stamp, ...stampDetails });
+        onSave({ ...currentStamp, ...stampDetails });
     };
 
     const handleInputChange = (key: string, value: string) => {
@@ -178,32 +158,46 @@ const StampModal: React.FC<StampModalProps> = ({ stamp, onClose, onSave }) => {
 
     const handleIncrement = (key: string) => {
         setStampValuesAndOwnership((prevValues) => ({
-          ...prevValues,
-          [key]: [
-            prevValues[key][0],
-            (prevValues[key][1] || 0) + 1,
-            prevValues[key][2]
-          ]
+            ...prevValues,
+            [key]: [
+                prevValues[key][0],
+                (prevValues[key][1] || 0) + 1,
+                prevValues[key][2]
+            ]
         }));
-      };
-    
-      const handleDecrement = (key: string) => {
+    };
+
+    const handleDecrement = (key: string) => {
         setStampValuesAndOwnership((prevValues) => ({
-          ...prevValues,
-          [key]: [
-            prevValues[key][0],
-            Math.max((prevValues[key][1] || 0) - 1, 0),
-            prevValues[key][2]
-          ]
+            ...prevValues,
+            [key]: [
+                prevValues[key][0],
+                Math.max((prevValues[key][1] || 0) - 1, 0),
+                prevValues[key][2]
+            ]
         }));
-      };
+    };
 
     const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files[0]) {
-          setImage(event.target.files[0]);
-          // Handle the image upload logic here
+            setImage(event.target.files[0]);
+            // Handle the image upload logic here
         }
-      };
+    };
+
+    const handleRelatedStampClick = async (stampId: number) => {
+        try {
+            // scroll to top of modal
+            modalRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+            setLoading(true);
+            const response = await axios.get(`http://localhost:5000/api/stamps/${stampId}`);
+            setCurrentStamp(response.data);
+        } catch (error) {
+            console.error('Error fetching stamp details:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div className={`stamp-modal-overlay ${isVisible ? 'visible' : ''}`}>
@@ -214,13 +208,12 @@ const StampModal: React.FC<StampModalProps> = ({ stamp, onClose, onSave }) => {
                     </svg>
                 </button>
                 <div className="stamp-modal-content">
-                    <h2>{stamp.set_name}</h2>
+                    <h2>{currentStamp.set_name}</h2>
                     <div className="stamp-modal-image-container">
-                        {stamp.image_path ? (
+                        {currentStamp.image_path ? (
                             <img
-                                src={`http://localhost:5000/images/${stamp.image_path.replace('./images_all_2/', '')}`}
-                                
-                                alt={stamp.set_name}
+                                src={`http://localhost:5000/images/${currentStamp.image_path.replace('./images_all_2/', '')}`}
+                                alt={currentStamp.set_name}
                                 className={`stamp-modal-image ${isImageLoaded ? 'loaded' : ''}`}
                                 onLoad={handleImageLoad}
                             />
@@ -239,7 +232,6 @@ const StampModal: React.FC<StampModalProps> = ({ stamp, onClose, onSave }) => {
                             </div>
                         )}
                     </div>
-                    {/* make horizontal line */}
                     <hr className="modal-line" />
                     <div className="stamp-details-wrapper">
                         <div className="stamp-details">
@@ -319,8 +311,8 @@ const StampModal: React.FC<StampModalProps> = ({ stamp, onClose, onSave }) => {
                         {loading ? (
                             <div className="loading-text">Loading related images...</div>
                         ) : (
-                            Object.values(relatedImages).map((img, index) => (
-                                <div className='related-stamp-container' key={index}>
+                            Object.entries(relatedImages).map(([id, img], index) => (
+                                <div className='related-stamp-container' key={index} onClick={() => handleRelatedStampClick(Number(id))}>
                                     {img &&
                                         <img
                                             key={index}
@@ -329,7 +321,6 @@ const StampModal: React.FC<StampModalProps> = ({ stamp, onClose, onSave }) => {
                                             className="related-stamp-image"
                                         />
                                     }
-                                    {/* if no image is available */}
                                     {!img &&
                                         <div key={ index } className="no-image-modal">No image <br/> available</div>
                                     }

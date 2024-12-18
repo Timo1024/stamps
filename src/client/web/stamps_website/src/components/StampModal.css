@@ -374,9 +374,15 @@ vertical-align: top;
     position: relative;
 }
 
-img.related-stamp-image {
-    max-width: 100%;
-    max-height: 100%;
+.related-stamp-image {
+    max-width: 95%;
+    max-height: 95%;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.related-stamp-image:hover {
+    transform: scale(1.05);
 }
 
 .related-images .no-image-modal {
