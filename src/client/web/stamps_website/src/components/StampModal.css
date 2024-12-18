@@ -70,6 +70,8 @@
   transition: all 0.3s ease;
   margin-top: 0;
   padding: 20px;
+  padding-top: 25px;
+  /* padding-top: 0px; */
 }
 
 .close-button svg {
@@ -143,6 +145,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.stamp-modal-content h2 {
+  width: 80%;
+  margin-top: 20px;
+  /* align text top */
+vertical-align: top;
 }
 
 /* grid layout */
